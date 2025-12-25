@@ -8,7 +8,6 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
@@ -23,7 +22,6 @@
   <div id="root"></div>
   <script type="text/babel">
     const { useState, useEffect } = React;
-    const { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } = Recharts;
 
     const API_URL = 'https://s-p-500-cycle-tracker-production.up.railway.app';
 
@@ -36,30 +34,6 @@
     };
 
     const WEIGHTS = { cape: 0.45, buffett: 0.45, creditSpread: 0.10 };
-
-    const CAPE_HISTORY = [
-      { date: '1881', value: 18.5 }, { date: '1900', value: 20.4 }, { date: '1929', value: 32.6 },
-      { date: '1932', value: 5.6 }, { date: '1950', value: 10.8 }, { date: '1965', value: 23.3 },
-      { date: '1974', value: 8.3 }, { date: '1982', value: 7.4 }, { date: '1990', value: 15.5 },
-      { date: '2000', value: 44.2 }, { date: '2007', value: 27.2 }, { date: '2009', value: 13.3 },
-      { date: '2018', value: 32.4 }, { date: '2021', value: 38.3 }, { date: '2022', value: 29.0 },
-      { date: '2024', value: 37.5 }, { date: '2025', value: 38 },
-    ];
-
-    const BUFFETT_HISTORY = [
-      { date: '1971', value: 74 }, { date: '1982', value: 33 }, { date: '1990', value: 53 },
-      { date: '1995', value: 85 }, { date: '2000', value: 137 }, { date: '2007', value: 111 },
-      { date: '2008', value: 63 }, { date: '2013', value: 115 }, { date: '2019', value: 156 },
-      { date: '2020', value: 186 }, { date: '2021', value: 208 }, { date: '2022', value: 158 },
-      { date: '2024', value: 210 }, { date: '2025', value: 200 },
-    ];
-
-    const CREDIT_SPREAD_HISTORY = [
-      { date: '1986', value: 2.33 }, { date: '1995', value: 1.51 }, { date: '2000', value: 2.30 },
-      { date: '2002', value: 2.97 }, { date: '2007', value: 2.01 }, { date: '2008', value: 4.16 },
-      { date: '2009', value: 3.55 }, { date: '2016', value: 2.34 }, { date: '2020', value: 2.76 },
-      { date: '2021', value: 1.52 }, { date: '2023', value: 1.87 }, { date: '2025', value: 1.74 },
-    ];
 
     const CAPE_RETURN_BUCKETS = {
       '0-10': { p10: 6.5, median: 11.2, p90: 14.8 },
@@ -117,23 +91,23 @@
         if (cape >= 40 && buffett >= 200) {
           return {
             headline: "Valuations have reached historic extremes.",
-            body: `Both CAPE (${cape.toFixed(1)}) and Buffett Indicator (${buffett}%) are near all-time highs. The only comparable periods—2000 and late 2021—were followed by significant corrections. Expected 10-year returns from these levels have historically been poor or negative.`
+            body: "Both CAPE (" + cape.toFixed(1) + ") and Buffett Indicator (" + buffett + "%) are near all-time highs. The only comparable periods - 2000 and late 2021 - were followed by significant corrections. Expected 10-year returns from these levels have historically been poor or negative."
           };
         }
         return {
           headline: "Valuations are at historic extremes.",
-          body: periodList ? `Similar conditions in ${periodList} were followed by significant declines.` : "At these levels, 10-year returns have historically been poor or negative."
+          body: periodList ? "Similar conditions in " + periodList + " were followed by significant declines." : "At these levels, 10-year returns have historically been poor or negative."
         };
       } else if (score >= 70) {
         if (creditSpread < 1.5) {
           return {
             headline: "Valuations are stretched and complacency is high.",
-            body: `Tight credit spreads (${creditSpread.toFixed(2)}%) suggest investors are not pricing in significant risk.`
+            body: "Tight credit spreads (" + creditSpread.toFixed(2) + "%) suggest investors are not pricing in significant risk."
           };
         }
         return {
           headline: "Valuations are well above historical norms.",
-          body: periodList ? `Comparable periods include ${periodList}. Returns over the following decade were typically below average.` : "Returns over the following decade have typically been below average."
+          body: periodList ? "Comparable periods include " + periodList + ". Returns over the following decade were typically below average." : "Returns over the following decade have typically been below average."
         };
       } else if (score >= 50) {
         return {
@@ -143,24 +117,37 @@
       } else if (score >= 30) {
         return {
           headline: "Valuations are near historical averages.",
-          body: `Markets are reasonably priced by historical standards. CAPE at ${cape.toFixed(1)} is close to its long-term median.`
+          body: "Markets are reasonably priced by historical standards. CAPE at " + cape.toFixed(1) + " is close to its long-term median."
         };
       } else {
         return {
           headline: "Valuations are historically attractive.",
-          body: periodList ? `Similar conditions in ${periodList} preceded strong long-term returns.` : "These conditions have historically preceded strong long-term returns."
+          body: periodList ? "Similar conditions in " + periodList + " preceded strong long-term returns." : "These conditions have historically preceded strong long-term returns."
         };
       }
+    }
+
+    function SimpleBar({ value, max, color, label }) {
+      const pct = Math.min(100, (value / max) * 100);
+      return (
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#8b949e', marginBottom: '4px' }}>
+            <span>{label}</span>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+            <div style={{ width: pct + '%', height: '100%', background: color, borderRadius: '4px' }}></div>
+          </div>
+        </div>
+      );
     }
 
     function App() {
       const [portfolio, setPortfolio] = useState(100000);
       const [data, setData] = useState(FALLBACK_DATA);
       const [loading, setLoading] = useState(true);
-      const [lastFetch, setLastFetch] = useState(null);
 
       useEffect(() => {
-        fetch(`${API_URL}/api/current`)
+        fetch(API_URL + '/api/current')
           .then(res => res.json())
           .then(apiData => {
             setData({
@@ -170,7 +157,6 @@
               buffett: { value: apiData.indicators.buffett, mean: 100 },
               creditSpread: { value: apiData.indicators.creditSpread }
             });
-            setLastFetch(new Date().toLocaleString());
             setLoading(false);
           })
           .catch(err => {
@@ -220,14 +206,11 @@
           <header style={{ marginBottom: '24px' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '4px' }}>S&P 500 Cycle Tracker</h1>
             <p style={{ color: '#8b949e', fontSize: '14px' }}>
-              {loading ? 'Loading live data...' : (
-                <>Data as of {new Date(data.lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
-              )}
+              {loading ? 'Loading live data...' : 'Data as of ' + new Date(data.lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </header>
 
-          {/* Main Score */}
-          <section style={{ background: traffic.bg, border: `1px solid ${traffic.color}40`, borderRadius: '12px', padding: '24px', marginBottom: '20px', textAlign: 'center' }}>
+          <section style={{ background: traffic.bg, border: '1px solid ' + traffic.color + '40', borderRadius: '12px', padding: '24px', marginBottom: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px', fontWeight: 700, color: traffic.color, lineHeight: 1 }}>{compositeScore}</div>
             <div style={{ fontSize: '14px', color: '#8b949e', marginTop: '4px' }}>out of 100</div>
             <div style={{ display: 'inline-block', background: traffic.color, color: '#fff', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, marginTop: '12px' }}>
@@ -238,7 +221,6 @@
             </p>
           </section>
 
-          {/* Scale */}
           <section style={{ background: 'rgba(22,27,34,0.4)', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: '#8b949e' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span><strong style={{ color: '#00e676' }}>0</strong> = Historically cheap</span>
@@ -247,27 +229,24 @@
             </div>
           </section>
 
-          {/* S&P 500 Price */}
           <section style={{ background: 'rgba(22,27,34,0.6)', borderRadius: '10px', padding: '16px 20px', marginBottom: '16px', border: '1px solid rgba(48,54,61,0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ color: '#8b949e', fontSize: '12px', textTransform: 'uppercase' }}>S&P 500</div>
-                <div style={{ fontSize: '28px', fontWeight: 600 }}>{data.sp500.price?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '—'}</div>
+                <div style={{ fontSize: '28px', fontWeight: 600 }}>{data.sp500.price ? data.sp500.price.toLocaleString(undefined, {minimumFractionDigits: 2}) : '—'}</div>
               </div>
               <div style={{ textAlign: 'right', fontSize: '13px', color: '#8b949e' }}>
-                <div>52W High: {data.sp500.high52w?.toLocaleString(undefined, {maximumFractionDigits: 0}) || '—'}</div>
-                <div>52W Low: {data.sp500.low52w?.toLocaleString(undefined, {maximumFractionDigits: 0}) || '—'}</div>
+                <div>52W High: {data.sp500.high52w ? data.sp500.high52w.toLocaleString(undefined, {maximumFractionDigits: 0}) : '—'}</div>
+                <div>52W Low: {data.sp500.low52w ? data.sp500.low52w.toLocaleString(undefined, {maximumFractionDigits: 0}) : '—'}</div>
               </div>
             </div>
           </section>
 
-          {/* Three Indicators */}
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-            {/* CAPE */}
             <div style={{ background: 'rgba(22,27,34,0.6)', borderRadius: '10px', padding: '14px 16px', border: '1px solid rgba(48,54,61,0.4)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span style={{ color: '#8b949e', fontSize: '11px', textTransform: 'uppercase' }}>CAPE Ratio</span>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getTrafficLight(capePercentile).color, boxShadow: `0 0 6px ${getTrafficLight(capePercentile).color}` }}></span>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getTrafficLight(capePercentile).color }}></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontSize: '22px', fontWeight: 600 }}>{cape.toFixed(1)}</span>
@@ -277,11 +256,10 @@
               <div style={{ marginTop: '6px', background: 'rgba(88,166,255,0.1)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', color: '#58a6ff', display: 'inline-block' }}>45% weight</div>
             </div>
 
-            {/* Buffett */}
             <div style={{ background: 'rgba(22,27,34,0.6)', borderRadius: '10px', padding: '14px 16px', border: '1px solid rgba(48,54,61,0.4)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span style={{ color: '#8b949e', fontSize: '11px', textTransform: 'uppercase' }}>Buffett Indicator</span>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getTrafficLight(buffettPercentile).color, boxShadow: `0 0 6px ${getTrafficLight(buffettPercentile).color}` }}></span>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getTrafficLight(buffettPercentile).color }}></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontSize: '22px', fontWeight: 600 }}>{buffett}%</span>
@@ -291,25 +269,23 @@
               <div style={{ marginTop: '6px', background: 'rgba(88,166,255,0.1)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', color: '#58a6ff', display: 'inline-block' }}>45% weight</div>
             </div>
 
-            {/* Credit Spread */}
             <div style={{ background: 'rgba(22,27,34,0.6)', borderRadius: '10px', padding: '14px 16px', border: '1px solid rgba(48,54,61,0.4)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span style={{ color: '#8b949e', fontSize: '11px', textTransform: 'uppercase' }}>Credit Spread</span>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getTrafficLight(creditSpreadPercentile).color, boxShadow: `0 0 6px ${getTrafficLight(creditSpreadPercentile).color}` }}></span>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getTrafficLight(creditSpreadPercentile).color }}></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontSize: '22px', fontWeight: 600 }}>{creditSpread.toFixed(2)}%</span>
                 <span style={{ fontSize: '13px', fontWeight: 600, color: getScoreColor(creditSpreadPercentile) }}>{Math.round(creditSpreadPercentile)}th</span>
               </div>
-              <div style={{ color: '#6e7681', fontSize: '11px', marginTop: '4px' }}>Baa − 10Y Treasury</div>
+              <div style={{ color: '#6e7681', fontSize: '11px', marginTop: '4px' }}>Baa - 10Y Treasury</div>
               <div style={{ marginTop: '6px', background: 'rgba(88,166,255,0.1)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', color: '#58a6ff', display: 'inline-block' }}>10% weight</div>
             </div>
           </section>
 
-          {/* Historical Analogues */}
           <section style={{ background: 'rgba(22,27,34,0.45)', borderRadius: '10px', padding: '16px 20px', marginBottom: '18px', border: '1px solid rgba(48,54,61,0.3)' }}>
             <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8b949e', marginBottom: '12px' }}>
-              What Happened Next (1957–2022 data)
+              What Happened Next (1957-2022 data)
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
               <div>
@@ -323,7 +299,7 @@
                 <div style={{ fontSize: '11px', color: '#8b949e' }}>Declined Within 1 Year</div>
               </div>
               <div>
-                <div style={{ fontSize: '28px', fontWeight: 700, color: '#f85149' }}>—</div>
+                <div style={{ fontSize: '28px', fontWeight: 700, color: '#f85149' }}>-</div>
                 <div style={{ fontSize: '11px', color: '#8b949e' }}>Fell 20%+ in 18 Months</div>
               </div>
             </div>
@@ -334,7 +310,6 @@
             )}
           </section>
 
-          {/* 10-Year Projections */}
           <section style={{ background: 'rgba(22,27,34,0.45)', borderRadius: '10px', padding: '16px 20px', marginBottom: '18px', border: '1px solid rgba(48,54,61,0.3)' }}>
             <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8b949e', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>10-Year Projection</span>
@@ -367,63 +342,27 @@
             </div>
           </section>
 
-          {/* Methodology */}
+          <section style={{ background: 'rgba(22,27,34,0.45)', borderRadius: '10px', padding: '16px 20px', marginBottom: '18px', border: '1px solid rgba(48,54,61,0.3)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8b949e', marginBottom: '16px' }}>Historical Context</div>
+            <SimpleBar value={cape} max={50} color="#58a6ff" label={'CAPE: ' + cape.toFixed(1) + ' (Mean: 17.3)'} />
+            <SimpleBar value={buffett} max={250} color="#a371f7" label={'Buffett: ' + buffett + '% (Mean: 85%)'} />
+            <SimpleBar value={creditSpread} max={5} color="#f78166" label={'Credit Spread: ' + creditSpread.toFixed(2) + '% (Mean: 2.0%)'} />
+          </section>
+
           <section style={{ background: 'rgba(22,27,34,0.45)', borderRadius: '10px', padding: '16px 20px', marginBottom: '18px', border: '1px solid rgba(48,54,61,0.3)' }}>
             <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8b949e', marginBottom: '10px' }}>Methodology</div>
             <div style={{ fontSize: '12px', color: '#8b949e', lineHeight: 1.65 }}>
               <p style={{ margin: '0 0 10px 0' }}>This score combines three indicators, weighted by their documented ability to predict long-term stock returns:</p>
               <div style={{ fontSize: '11px', marginBottom: '10px' }}>
-                <div style={{ marginBottom: '6px' }}><strong style={{ color: '#e6edf3' }}>CAPE Ratio (45%)</strong> — Current price divided by 10-year average inflation-adjusted earnings.</div>
-                <div style={{ marginBottom: '6px' }}><strong style={{ color: '#e6edf3' }}>Buffett Indicator (45%)</strong> — Total stock market capitalization divided by GDP.</div>
-                <div><strong style={{ color: '#e6edf3' }}>Credit Spread (10%)</strong> — Difference between Baa corporate bond yields and 10-Year Treasury yields.</div>
+                <div style={{ marginBottom: '6px' }}><strong style={{ color: '#e6edf3' }}>CAPE Ratio (45%)</strong> - Current price divided by 10-year average inflation-adjusted earnings.</div>
+                <div style={{ marginBottom: '6px' }}><strong style={{ color: '#e6edf3' }}>Buffett Indicator (45%)</strong> - Total stock market capitalization divided by GDP.</div>
+                <div><strong style={{ color: '#e6edf3' }}>Credit Spread (10%)</strong> - Difference between Baa corporate bond yields and 10-Year Treasury yields.</div>
               </div>
             </div>
           </section>
 
-          {/* Historical Charts */}
-          <section style={{ background: 'rgba(22,27,34,0.45)', borderRadius: '10px', padding: '16px 20px', marginBottom: '18px', border: '1px solid rgba(48,54,61,0.3)' }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8b949e', marginBottom: '16px' }}>Historical Context</div>
-            
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>CAPE Ratio (1881–Present)</div>
-              <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={CAPE_HISTORY}>
-                  <XAxis dataKey="date" tick={{ fill: '#6e7681', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#6e7681', fontSize: 10 }} domain={[0, 50]} />
-                  <ReferenceLine y={17.3} stroke="#ffc107" strokeDasharray="5 5" />
-                  <Line type="monotone" dataKey="value" stroke="#58a6ff" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>Buffett Indicator (1971–Present)</div>
-              <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={BUFFETT_HISTORY}>
-                  <XAxis dataKey="date" tick={{ fill: '#6e7681', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#6e7681', fontSize: 10 }} domain={[0, 250]} />
-                  <ReferenceLine y={85} stroke="#ffc107" strokeDasharray="5 5" />
-                  <Line type="monotone" dataKey="value" stroke="#a371f7" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>Credit Spreads (1986–Present)</div>
-              <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={CREDIT_SPREAD_HISTORY}>
-                  <XAxis dataKey="date" tick={{ fill: '#6e7681', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#6e7681', fontSize: 10 }} domain={[0, 5]} />
-                  <ReferenceLine y={2.0} stroke="#ffc107" strokeDasharray="5 5" />
-                  <Line type="monotone" dataKey="value" stroke="#f78166" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
-
-          {/* Footer */}
           <footer style={{ textAlign: 'center', padding: '16px', color: '#6e7681', fontSize: '11px', borderTop: '1px solid rgba(48,54,61,0.3)' }}>
-            <p>Data refreshes every 4 hours. Educational content only — not financial advice.</p>
+            <p>Data refreshes every 4 hours. Educational content only - not financial advice.</p>
             <p style={{ marginTop: '4px' }}>Built by <a href="https://alexpanetta.substack.com" style={{ color: '#58a6ff', textDecoration: 'none' }}>Alex Panetta</a></p>
           </footer>
         </div>
