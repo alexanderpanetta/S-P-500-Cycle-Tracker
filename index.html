@@ -494,7 +494,7 @@
         <!-- Composite Score -->
         <div class="score-panel">
             <div class="score-display">
-                <div class="score-number" id="compositeScore">99</div>
+                <div class="score-number" id="compositeScore">98</div>
                 <div class="score-label">Composite Score (0-100)</div>
             </div>
             <div class="score-context">
@@ -521,8 +521,8 @@
                     <span class="indicator-name">CAPE Ratio (Shiller P/E)</span>
                     <div class="indicator-dot dot-red"></div>
                 </div>
-                <div class="indicator-value" id="capeValue">39.4</div>
-                <div class="indicator-meta"><span id="capePercentile">98</span>th percentile since 1881</div>
+                <div class="indicator-value" id="capeValue">38.2</div>
+                <div class="indicator-meta"><span id="capePercentile">97</span>th percentile since 1881</div>
                 <div class="percentile-bar">
                     <div class="percentile-fill" id="capeFill" style="width: 97%; background: var(--accent-red);"></div>
                 </div>
@@ -533,7 +533,7 @@
                     <span class="indicator-name">Buffett Indicator*</span>
                     <div class="indicator-dot dot-red"></div>
                 </div>
-                <div class="indicator-value" id="buffettValue">244%</div>
+                <div class="indicator-value" id="buffettValue">239%</div>
                 <div class="indicator-meta" id="buffettPercentile">All-time high (data since 1947)</div>
                 <div class="percentile-bar">
                     <div class="percentile-fill" id="buffettFill" style="width: 100%; background: var(--accent-red);"></div>
@@ -633,7 +633,7 @@
 
                 <div class="caveat">
                     <strong>*Buffett Indicator note:</strong> We use Federal Reserve Z.1 data for total market capitalization, 
-                    which is broader than the Wilshire 5000 used by most sources. This produces a higher reading (~244% vs ~222% 
+                    which is broader than the Wilshire 5000 used by most sources. This produces a higher reading (~239% vs ~200% 
                     reported elsewhere) but allows longer-term data, going back to 1947.
                 </div>
 
@@ -686,11 +686,11 @@
         
         // Fallback static data
         const STATIC_DATA = {
-            score: 99,
+            score: 98,
             sp500: { value: 6845.50, timestamp: 'Dec 31 close' },
-            cape: { value: 39.4, percentile: 98 },
-            buffett: { value: 244, percentile: 100 },
-            creditSpread: { value: 1.69, percentile: 19 }
+            cape: { value: 38.2, percentile: 97 },
+            buffett: { value: 239, percentile: 99 },
+            creditSpread: { value: 1.75, percentile: 24 }
         };
 
         // Update the page with live data
@@ -919,7 +919,7 @@
             { year: 2020, value: 31.0 },
             { year: 2021, value: 42.0 },
             { year: 2023, value: 30.0 },
-            { year: 2025, value: 39.4 }
+            { year: 2025, value: 38.2 }
         ];
 
         // Buffett data (1947-2025) - actual data points
@@ -946,7 +946,7 @@
             { year: 2021, value: 239 },
             { year: 2022, value: 157 },
             { year: 2024, value: 232 },
-            { year: 2025, value: 244 }
+            { year: 2025, value: 239 }
         ];
 
         // CAPE Chart - using linear scale for proper year spacing
