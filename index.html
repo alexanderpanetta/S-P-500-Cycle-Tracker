@@ -90,7 +90,7 @@
         }
 
         .hero-live {
-            display: none;
+            display: inline;
             font-size: 0.7rem;
             color: var(--accent-green);
             margin-top: 0.5rem;
@@ -490,7 +490,7 @@
             <h1 class="hero-title">Stock Market Cycle Tracker</h1>
             <p class="hero-subtitle">Market valuation analysis with 140+ years of historical context</p>
             <p id="lastUpdated" class="hero-subtitle" style="margin-top: 0.25rem; font-size: 0.8rem; display: none;"></p>
-            <span id="liveIndicator" class="hero-live">● LIVE DATA</span>
+            <span id="liveIndicator" class="hero-live">● UPDATED DAILY</span>
         </div>
     </div>
 
@@ -505,7 +505,7 @@
             <div class="score-context">
                 <div class="score-assessment" id="scoreAssessment">Historically Extreme Valuations</div>
                 <p class="score-description" id="scoreDescription">
-                    A composite score of 98 matches the highest levels on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, cases.
+                    A composite score of 98 matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.
                 </p>
             </div>
         </div>
@@ -716,7 +716,7 @@
                 const scoreAssess = document.getElementById('scoreAssessment');
                 if (data.score >= 90) {
                     scoreAssess.textContent = 'Historically Extreme Valuations';
-                    scoreDesc.textContent = `A composite score of ${data.score} matches the highest levels on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, cases.`;
+                    scoreDesc.textContent = `A composite score of ${data.score} matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.`;
                 } else if (data.score >= 75) {
                     scoreAssess.textContent = 'Elevated Stock Values';
                     scoreDesc.textContent = `A composite score of ${data.score} is in the high range, similar to levels seen before the 2007 financial crisis (87). Historically, such readings preceded significant corrections in most cases.`;
@@ -758,17 +758,13 @@
                 document.getElementById('creditPercentile').textContent = data.creditSpread.percentile;
                 document.getElementById('creditFill').style.width = data.creditSpread.percentile + '%';
                 
-                // Update timestamp
+                // Update timestamp (use US Eastern time to match market data)
                 const updateTime = new Date(data.updatedAt).toLocaleDateString('en-US', {
-                    month: 'short', day: 'numeric', year: 'numeric'
+                    month: 'short', day: 'numeric', year: 'numeric',
+                    timeZone: 'America/New_York'
                 });
                 document.getElementById('lastUpdated').textContent = `Data as of ${updateTime}`;
                 document.getElementById('lastUpdated').style.display = 'block';
-                
-                // Show live indicator if data is live
-                if (data.isLive) {
-                    document.getElementById('liveIndicator').style.display = 'inline';
-                }
                 
                 // Update parallels based on score
                 updateParallels(data.score);
