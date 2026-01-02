@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Cycle Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            --accent-red: #f85149;
+            --accent-orange: #d29922;
+            --accent-yellow: #e3b341;
+            --accent-green: #3fb950;
+            --accent-blue: #58a6ff;
+            --border-color: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: linear-gradient(180deg, #0a0e14 0%, #0d1117 15%, #0d1117 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            filter: brightness(0.6) contrast(1.1);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(13, 17, 23, 0.3) 0%,
+                rgba(13, 17, 23, 0.5) 50%,
+                rgba(13, 17, 23, 0.95) 85%,
+                rgba(13, 17, 23, 1) 100%
+            );
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #ffffff;
+            text-shadow: 0 0 30px rgba(248, 81, 73, 0.5), 0 0 60px rgba(248, 81, 73, 0.3);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            color: #8b949e;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+
+        .hero-live {
+            display: none;
+            font-size: 0.7rem;
+            color: var(--accent-green);
+            margin-top: 0.5rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* S&P 500 Ticker */
+        .sp500-ticker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .ticker-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .ticker-value {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .ticker-change {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .ticker-change.up {
+            color: var(--accent-green);
+        }
+
+        .ticker-change.down {
+            color: var(--accent-red);
+        }
+
+        .ticker-timestamp {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Score Panel */
+        .score-panel {
+            background: linear-gradient(135deg, #161b22 0%, #1a1f26 50%, #161b22 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-display { text-align: center; }
+
+        .score-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--accent-red);
+            text-shadow: 0 0 20px rgba(248, 81, 73, 0.4);
+        }
+
+        .score-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .score-context { flex: 1; min-width: 280px; }
+
+        .score-assessment {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-red);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Indicators Grid */
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .indicator-card {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .indicator-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .indicator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .indicator-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .indicator-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dot-red { background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
+
+        .indicator-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .indicator-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .percentile-bar {
+            height: 4px;
+            background: var(--bg-card);
+            border-radius: 2px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .percentile-fill { 
+            height: 100%; 
+            border-radius: 2px;
+            transition: width 1s ease-out;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 1.75rem; }
+        }
+
+        .chart-section {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        /* Parallels Section */
+        .parallels-section {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .parallels-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .parallels-table th {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .parallels-table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--bg-card);
+        }
+
+        .parallels-table tr:last-child td { border-bottom: none; }
+
+        .era-name { font-weight: 600; font-size: 1rem; }
+        .era-context { font-size: 0.75rem; color: var(--text-muted); }
+
+        .mono { font-family: 'IBM Plex Mono', monospace; }
+        .negative { color: var(--accent-red); }
+        .positive { color: var(--accent-green); }
+        .warning { color: var(--accent-orange); }
+        .muted { color: var(--text-muted); }
+        .fell-yes { color: var(--accent-red); font-weight: 600; }
+        .fell-no { color: var(--accent-green); }
+
+        /* Summary Stats */
+        .summary-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .summary-stat {
+            background: var(--bg-card);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .summary-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .footnote {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Methodology Section */
+        .methodology-section {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .methodology-section h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .methodology-content {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .methodology-content p {
+            margin-bottom: 0.75rem;
+        }
+
+        .methodology-content strong {
+            color: var(--text-primary);
+        }
+
+        .caveat {
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent-orange);
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+
+        /* Sources */
+        .sources {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .sources-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .sources a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .sources a:hover {
+            text-decoration: underline;
+        }
+
+        .source-item {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .score-panel { flex-direction: column; text-align: center; }
+            .score-number { font-size: 4rem; }
+            .parallels-table { font-size: 0.8rem; }
+            .hero-section { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section with Bull/Bear Image -->
+    <div class="hero-section">
+        <img src="bull-bear.png" alt="Bull vs Bear" class="hero-image">
+        <div class="hero-overlay">
+            <h1 class="hero-title">Stock Market Cycle Tracker</h1>
+            <p class="hero-subtitle">Market valuation analysis with 140+ years of historical context</p>
+            <p id="lastUpdated" class="hero-subtitle" style="margin-top: 0.25rem; font-size: 0.8rem; display: none;"></p>
+            <span id="liveIndicator" class="hero-live">● LIVE DATA</span>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Composite Score -->
+        <div class="score-panel">
+            <div class="score-display">
+                <div class="score-number" id="compositeScore">99</div>
+                <div class="score-label">Composite Score (0-100)</div>
+            </div>
+            <div class="score-context">
+                <div class="score-assessment">Historically High Stock Values</div>
+                <p class="score-description">
+                    Current readings place the market at the 99th percentile of historical valuations, 
+                    matching or exceeding previous bubble peaks in 1929, 2000, and 2021.
+                </p>
+            </div>
+        </div>
+
+        <!-- S&P 500 Current Value -->
+        <div class="sp500-ticker">
+            <span class="ticker-label">S&P 500</span>
+            <span class="ticker-value" id="sp500Value">—</span>
+            <span class="ticker-change" id="sp500Change"></span>
+            <span class="ticker-timestamp" id="sp500Timestamp"></span>
+        </div>
+
+        <!-- Indicator Cards -->
+        <div class="indicators-grid">
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <span class="indicator-name">CAPE Ratio (Shiller P/E)</span>
+                    <div class="indicator-dot dot-red"></div>
+                </div>
+                <div class="indicator-value" id="capeValue">39.4</div>
+                <div class="indicator-meta"><span id="capePercentile">98</span>th percentile since 1881</div>
+                <div class="percentile-bar">
+                    <div class="percentile-fill" id="capeFill" style="width: 97%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <span class="indicator-name">Buffett Indicator*</span>
+                    <div class="indicator-dot dot-red"></div>
+                </div>
+                <div class="indicator-value" id="buffettValue">244%</div>
+                <div class="indicator-meta" id="buffettPercentile">All-time high (data since 1947)</div>
+                <div class="percentile-bar">
+                    <div class="percentile-fill" id="buffettFill" style="width: 100%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <span class="indicator-name">Credit Spread (BAA-10Y)</span>
+                    <div class="indicator-dot dot-red"></div>
+                </div>
+                <div class="indicator-value" id="creditValue">1.69%</div>
+                <div class="indicator-meta"><span id="creditPercentile">19</span>th percentile — low spreads signal complacency.<br>Similar lows preceded peaks in '87, '00, '07, '21</div>
+                <div class="percentile-bar">
+                    <div class="percentile-fill" id="creditFill" style="width: 19%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Separate Charts -->
+        <div class="charts-grid">
+            <div class="chart-section">
+                <h2 class="section-title">CAPE Ratio (1881–2025)</h2>
+                <div class="chart-container">
+                    <canvas id="capeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h2 class="section-title">Buffett Indicator (1947–2025)*</h2>
+                <div class="chart-container">
+                    <canvas id="buffettChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Closest Parallels -->
+        <div class="parallels-section">
+            <h2 class="section-title">Closest Historical Parallels</h2>
+            <p id="parallelsDescription" style="color: var(--text-secondary); font-size: 0.9rem;">
+                Four eras when CAPE reached the 90th percentile or higher. Peak valuations and subsequent S&P 500 performance:
+            </p>
+
+            <table class="parallels-table">
+                <thead>
+                    <tr>
+                        <th>Era</th>
+                        <th>Peak CAPE</th>
+                        <th>Peak Buffett</th>
+                        <th>1Y Return</th>
+                        <th>Max Drawdown</th>
+                        <th>Fell 20%+</th>
+                    </tr>
+                </thead>
+                <tbody id="parallelsTableBody">
+                    <!-- Populated by JavaScript based on composite score -->
+                </tbody>
+            </table>
+
+            <div class="summary-row" id="parallelsSummary">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            
+        </div>
+
+        <!-- Methodology Section -->
+        <div class="methodology-section">
+            <h2>Methodology</h2>
+            <div class="methodology-content">
+                <p>
+                    <strong>CAPE Ratio</strong> (Cyclically Adjusted Price-to-Earnings), developed by economist Robert Shiller, 
+                    divides the S&P 500 index price by the average of ten years of earnings, adjusted for inflation. 
+                    By smoothing out short-term fluctuations, it provides a long-term view of U.S. stock market valuation. 
+                    Data extends back to 1881.
+                </p>
+
+                <p>
+                    <strong>Buffett Indicator</strong> divides the total value of all publicly traded U.S. stocks by 
+                    U.S. gross domestic product (GDP). Named after Warren Buffett, who called it "probably the best single 
+                    measure of where valuations stand at any given moment." It measures overall U.S. market valuation 
+                    relative to the size of the economy.
+                </p>
+
+                <p>
+                    <strong>Composite Score</strong> is the average of two percentile rankings: the CAPE ratio's percentile 
+                    (vs. all monthly observations since 1881) and the Buffett Indicator's percentile (vs. all quarterly 
+                    observations since 1947). Example score: (98 + 100) / 2 = <strong>99</strong>.
+                </p>
+                
+                <p>
+                    <strong>Credit Spread</strong> is shown separately as a sentiment indicator. It measures how much extra 
+                    yield investors demand for corporate bonds over Treasuries. Low spreads indicate complacency—investors 
+                    aren't worried about defaults. Historically, spreads this low (19th percentile) have preceded major 
+                    market peaks, though they don't predict timing.
+                </p>
+
+                <div class="caveat">
+                    <strong>*Buffett Indicator note:</strong> We use Federal Reserve Z.1 data for total market capitalization, 
+                    which is broader than the Wilshire 5000 used by most sources. This produces a higher reading (~244% vs ~222% 
+                    reported elsewhere) but allows longer-term data, going back to 1947.
+                </div>
+
+                <div class="caveat">
+                    <strong>Historical comparisons note:</strong> For eras before 1947 (1901, 1929), only CAPE data is available. 
+                    Buffett Indicator readings for these periods are marked N/A.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sources -->
+        <div class="sources">
+            <div class="sources-title">Data Sources</div>
+            <div class="source-item">
+                <strong>S&P 500:</strong> S&P Dow Jones Indices — 
+                <a href="https://fred.stlouisfed.org/series/SP500" target="_blank">FRED</a>
+            </div>
+            <div class="source-item">
+                <strong>CAPE Ratio:</strong> Robert Shiller, Yale University — 
+                <a href="http://www.econ.yale.edu/~shiller/data.htm" target="_blank">econ.yale.edu/~shiller/data.htm</a>
+            </div>
+            <div class="source-item">
+                <strong>Market Capitalization:</strong> Federal Reserve Z.1 Financial Accounts (BOGZ1LM883164115Q) — 
+                <a href="https://fred.stlouisfed.org/series/BOGZ1LM883164115Q" target="_blank">FRED</a>
+            </div>
+            <div class="source-item">
+                <strong>GDP:</strong> Bureau of Economic Analysis — 
+                <a href="https://fred.stlouisfed.org/series/GDP" target="_blank">FRED</a>
+            </div>
+            <div class="source-item">
+                <strong>Credit Spread:</strong> Moody's BAA minus 10-Year Treasury (BAA10Y) — 
+                <a href="https://fred.stlouisfed.org/series/BAA10Y" target="_blank">FRED</a>
+            </div>
+            <div class="source-item">
+                <a href="https://www.macrotrends.net/2324/sp-500-historical-chart-data" target="_blank">MacroTrends</a> S&P 500 data helped calculate 1-year returns and maximum drawdowns for comparable historical periods.
+            </div>
+        </div>
+    </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            For updates on this site, and to encourage the development of useful, ethical AI tools,<br>
+            please consider subscribing to my blog at <a href="https://alexpanetta.substack.com" target="_blank">alexpanetta.substack.com</a>
+        </footer>
+    </div>
+
+    <script>
+        // API endpoint - update this to your deployed backend URL
+        const API_BASE = 'https://s-p-500-cycle-tracker-production.up.railway.app';
+        
+        // Fallback static data
+        const STATIC_DATA = {
+            score: 99,
+            sp500: { value: 6845.50, timestamp: 'Dec 31 close' },
+            cape: { value: 39.4, percentile: 98 },
+            buffett: { value: 244, percentile: 100 },
+            creditSpread: { value: 1.69, percentile: 19 }
+        };
+
+        // Update the page with live data
+        async function fetchAndUpdateData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/indicators`);
+                if (!response.ok) throw new Error('API request failed');
+                
+                const data = await response.json();
+                
+                // Update composite score
+                document.getElementById('compositeScore').textContent = data.score;
+                
+                // Update S&P 500 ticker
+                if (data.sp500) {
+                    document.getElementById('sp500Value').textContent = data.sp500.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const changeEl = document.getElementById('sp500Change');
+                    if (data.sp500.change !== undefined) {
+                        const changeSign = data.sp500.change >= 0 ? '+' : '';
+                        changeEl.textContent = `${changeSign}${data.sp500.change.toFixed(2)} (${changeSign}${data.sp500.changePercent.toFixed(2)}%)`;
+                        changeEl.className = 'ticker-change ' + (data.sp500.change >= 0 ? 'up' : 'down');
+                    }
+                    if (data.sp500.timestamp) {
+                        document.getElementById('sp500Timestamp').textContent = data.sp500.timestamp;
+                    }
+                }
+                
+                // Update CAPE
+                document.getElementById('capeValue').textContent = data.cape.value.toFixed(1);
+                document.getElementById('capePercentile').textContent = data.cape.percentile;
+                document.getElementById('capeFill').style.width = data.cape.percentile + '%';
+                
+                // Update Buffett
+                document.getElementById('buffettValue').textContent = data.buffett.value + '%';
+                document.getElementById('buffettPercentile').textContent = data.buffett.isAllTimeHigh ? 
+                    'All-time high' : data.buffett.percentile + 'th percentile';
+                document.getElementById('buffettFill').style.width = Math.min(data.buffett.percentile, 100) + '%';
+                
+                // Update Credit Spread
+                document.getElementById('creditValue').textContent = data.creditSpread.value.toFixed(2) + '%';
+                document.getElementById('creditPercentile').textContent = data.creditSpread.percentile;
+                document.getElementById('creditFill').style.width = data.creditSpread.percentile + '%';
+                
+                // Update timestamp
+                const updateTime = new Date(data.updatedAt).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric'
+                });
+                document.getElementById('lastUpdated').textContent = `Data as of ${updateTime}`;
+                document.getElementById('lastUpdated').style.display = 'block';
+                
+                // Show live indicator if data is live
+                if (data.isLive) {
+                    document.getElementById('liveIndicator').style.display = 'inline';
+                }
+                
+                // Update parallels based on score
+                updateParallels(data.score);
+                
+                console.log('Data updated:', data);
+            } catch (error) {
+                console.log('Using static data:', error.message);
+                // Use static data for S&P 500 and parallels
+                document.getElementById('sp500Value').textContent = STATIC_DATA.sp500.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('sp500Timestamp').textContent = STATIC_DATA.sp500.timestamp;
+                updateParallels(STATIC_DATA.score);
+            }
+        }
+
+        // Historical parallels data organized by score ranges
+        const historicalParallels = {
+            // Score 90-100: Extreme valuations (bubble territory)
+            extreme: {
+                description: "Eras when CAPE reached the 90th percentile or higher. Peak valuations and subsequent S&P 500 performance:",
+                eras: [
+                    { year: "1929", context: "Pre-Great Depression", cape: 39.5, buffett: "N/A*", return1y: -33.6, maxDD: -67, fell20: true },
+                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 48.1, buffett: "172%", return1y: -22.6, maxDD: -49, fell20: true },
+                    { year: "2021", context: "Post-COVID Peak", cape: 42.0, buffett: "239%", return1y: -16.1, maxDD: -25, fell20: true },
+                    { year: "1901", context: "Turn of Century", cape: 30.2, buffett: "N/A*", return1y: -1.1, maxDD: -6.7, fell20: false }
+                ],
+                summary: { eras: 4, fell20Pct: 75, median1y: -19, medianDD: -37 }
+            },
+            // Score 75-89: High valuations
+            high: {
+                description: "Eras when CAPE was in the 75th-90th percentile range. Peak valuations and subsequent S&P 500 performance:",
+                eras: [
+                    { year: "1937", context: "Pre-WWII Recovery", cape: 29.3, buffett: "N/A*", return1y: -35.0, maxDD: -49, fell20: true },
+                    { year: "1966", context: "Go-Go Years Peak", cape: 24.1, buffett: "78%", return1y: -10.1, maxDD: -22, fell20: true },
+                    { year: "2007", context: "Pre-Financial Crisis", cape: 29.5, buffett: "131%", return1y: -38.5, maxDD: -57, fell20: true },
+                    { year: "2018", context: "Late Bull Market", cape: 35.0, buffett: "161%", return1y: -6.2, maxDD: -20, fell20: false }
+                ],
+                summary: { eras: 4, fell20Pct: 75, median1y: -22, medianDD: -36 }
+            },
+            // Score 50-74: Moderate valuations
+            moderate: {
+                description: "Eras when CAPE was in the 50th-75th percentile range. Valuations and subsequent S&P 500 performance:",
+                eras: [
+                    { year: "1961-62", context: "Kennedy Era", cape: 22.0, buffett: "60%", return1y: -8.7, maxDD: -28, fell20: true },
+                    { year: "1987", context: "Pre-Black Monday", cape: 22.9, buffett: "60%", return1y: 2.0, maxDD: -34, fell20: true },
+                    { year: "1996", context: "Mid-90s Bull", cape: 25.0, buffett: "95%", return1y: 31.0, maxDD: -6, fell20: false },
+                    { year: "2014-15", context: "QE Era", cape: 27.0, buffett: "115%", return1y: -0.7, maxDD: -13, fell20: false }
+                ],
+                summary: { eras: 4, fell20Pct: 50, median1y: -4, medianDD: -21 }
+            },
+            // Score 25-49: Below average valuations
+            belowAverage: {
+                description: "Eras when CAPE was in the 25th-50th percentile range. Valuations and subsequent S&P 500 performance:",
+                eras: [
+                    { year: "1953", context: "Post-Korean War", cape: 13.0, buffett: "45%", return1y: 45.0, maxDD: -3, fell20: false },
+                    { year: "1978", context: "Stagflation Era", cape: 10.4, buffett: "42%", return1y: 12.3, maxDD: -10, fell20: false },
+                    { year: "1988", context: "Post-Crash Recovery", cape: 15.0, buffett: "55%", return1y: 27.3, maxDD: -5, fell20: false },
+                    { year: "2010", context: "Post-Crisis Recovery", cape: 20.5, buffett: "85%", return1y: 12.8, maxDD: -16, fell20: false }
+                ],
+                summary: { eras: 4, fell20Pct: 0, median1y: 13, medianDD: -8 }
+            },
+            // Score 0-24: Low valuations (historically cheap)
+            low: {
+                description: "Eras when CAPE was in the bottom 25th percentile. Valuations and subsequent S&P 500 performance:",
+                eras: [
+                    { year: "1920-21", context: "Post-WWI Depression", cape: 6.6, buffett: "N/A*", return1y: 12.7, maxDD: -9, fell20: false },
+                    { year: "1932", context: "Great Depression Low", cape: 6.6, buffett: "N/A*", return1y: 53.8, maxDD: -8, fell20: false },
+                    { year: "1974", context: "Stagflation Bottom", cape: 7.7, buffett: "45%", return1y: 31.6, maxDD: -14, fell20: false },
+                    { year: "1982", context: "Volcker Bottom", cape: 7.4, buffett: "36%", return1y: 40.4, maxDD: -6, fell20: false },
+                    { year: "2009", context: "Financial Crisis Low", cape: 15.2, buffett: "57%", return1y: 23.5, maxDD: -7, fell20: false }
+                ],
+                summary: { eras: 5, fell20Pct: 0, median1y: 32, medianDD: -8 }
+            }
+        };
+
+        function getParallelsForScore(score) {
+            if (score >= 90) return historicalParallels.extreme;
+            if (score >= 75) return historicalParallels.high;
+            if (score >= 50) return historicalParallels.moderate;
+            if (score >= 25) return historicalParallels.belowAverage;
+            return historicalParallels.low;
+        }
+
+        function updateParallels(score) {
+            const parallels = getParallelsForScore(score);
+            
+            // Update description
+            document.getElementById('parallelsDescription').textContent = parallels.description;
+            
+            // Build table rows
+            const tbody = document.getElementById('parallelsTableBody');
+            tbody.innerHTML = parallels.eras.map(era => `
+                <tr>
+                    <td>
+                        <div class="era-name">${era.year}</div>
+                        <div class="era-context">${era.context}</div>
+                    </td>
+                    <td class="mono">${era.cape}</td>
+                    <td class="mono ${era.buffett === 'N/A*' ? 'muted' : ''}">${era.buffett}</td>
+                    <td class="mono ${era.return1y < 0 ? 'negative' : 'positive'}">${era.return1y > 0 ? '+' : ''}${era.return1y}%</td>
+                    <td class="mono negative">${era.maxDD}%</td>
+                    <td class="${era.fell20 ? 'fell-yes' : 'fell-no'}">${era.fell20 ? 'YES' : 'No'}</td>
+                </tr>
+            `).join('');
+            
+            // Update summary
+            const summary = parallels.summary;
+            const summaryDiv = document.getElementById('parallelsSummary');
+            summaryDiv.innerHTML = `
+                <div class="summary-stat">
+                    <div class="summary-value">${summary.eras}</div>
+                    <div class="summary-label">Eras Analyzed</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-value ${summary.fell20Pct > 50 ? 'negative' : summary.fell20Pct > 0 ? 'warning' : 'positive'}">${summary.fell20Pct}%</div>
+                    <div class="summary-label">Fell 20%+ in 18mo</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-value ${summary.median1y < 0 ? 'negative' : 'positive'}">${summary.median1y > 0 ? '+' : ''}${summary.median1y}%</div>
+                    <div class="summary-label">Median 1Y Return</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-value negative">${summary.medianDD}%</div>
+                    <div class="summary-label">Median Max DD</div>
+                </div>
+            `;
+        }
+
+        // Fetch data on page load
+        fetchAndUpdateData();
+
+        // CAPE data - more data points for smoother curve
+        const capeData = [
+            { year: 1881, value: 18.5 },
+            { year: 1890, value: 22.0 },
+            { year: 1901, value: 30.2 },
+            { year: 1910, value: 15.0 },
+            { year: 1921, value: 6.6 },
+            { year: 1929, value: 39.5 },
+            { year: 1932, value: 6.6 },
+            { year: 1937, value: 29.3 },
+            { year: 1942, value: 9.0 },
+            { year: 1950, value: 12.0 },
+            { year: 1960, value: 18.0 },
+            { year: 1966, value: 24.1 },
+            { year: 1975, value: 10.0 },
+            { year: 1982, value: 7.4 },
+            { year: 1987, value: 22.9 },
+            { year: 1995, value: 24.0 },
+            { year: 2000, value: 48.1 },
+            { year: 2003, value: 22.0 },
+            { year: 2007, value: 29.5 },
+            { year: 2009, value: 15.2 },
+            { year: 2015, value: 27.0 },
+            { year: 2018, value: 35.0 },
+            { year: 2020, value: 31.0 },
+            { year: 2021, value: 42.0 },
+            { year: 2023, value: 30.0 },
+            { year: 2025, value: 39.4 }
+        ];
+
+        // Buffett data (1947-2025) - actual data points
+        const buffettData = [
+            { year: 1947, value: 35 },
+            { year: 1952, value: 36 },
+            { year: 1957, value: 52 },
+            { year: 1962, value: 60 },
+            { year: 1966, value: 78 },
+            { year: 1970, value: 72 },
+            { year: 1974, value: 45 },
+            { year: 1978, value: 42 },
+            { year: 1982, value: 36 },
+            { year: 1987, value: 60 },
+            { year: 1990, value: 55 },
+            { year: 1995, value: 85 },
+            { year: 2000, value: 172 },
+            { year: 2003, value: 75 },
+            { year: 2007, value: 131 },
+            { year: 2009, value: 57 },
+            { year: 2015, value: 115 },
+            { year: 2018, value: 161 },
+            { year: 2020, value: 175 },
+            { year: 2021, value: 239 },
+            { year: 2022, value: 157 },
+            { year: 2024, value: 232 },
+            { year: 2025, value: 244 }
+        ];
+
+        // CAPE Chart - using linear scale for proper year spacing
+        const capeCtx = document.getElementById('capeChart').getContext('2d');
+        new Chart(capeCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'CAPE',
+                    data: capeData.map(d => ({ x: d.year, y: d.value })),
+                    borderColor: '#58a6ff',
+                    backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#21262d',
+                        titleColor: '#e6edf3',
+                        bodyColor: '#e6edf3',
+                        callbacks: {
+                            label: (ctx) => `CAPE: ${ctx.parsed.y.toFixed(1)}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        min: 1881,
+                        max: 2025,
+                        grid: { color: '#21262d' },
+                        ticks: { 
+                            color: '#8b949e',
+                            stepSize: 40,
+                            callback: (value) => value
+                        }
+                    },
+                    y: {
+                        grid: { color: '#21262d' },
+                        ticks: { color: '#8b949e' },
+                        min: 0,
+                        max: 55
+                    }
+                }
+            }
+        });
+
+        // Buffett Chart - using linear scale for proper year spacing
+        const buffettCtx = document.getElementById('buffettChart').getContext('2d');
+        new Chart(buffettCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Buffett %',
+                    data: buffettData.map(d => ({ x: d.year, y: d.value })),
+                    borderColor: '#f85149',
+                    backgroundColor: 'rgba(248, 81, 73, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#21262d',
+                        titleColor: '#e6edf3',
+                        bodyColor: '#e6edf3',
+                        callbacks: {
+                            label: (ctx) => `Buffett: ${ctx.parsed.y}%`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        min: 1947,
+                        max: 2025,
+                        grid: { color: '#21262d' },
+                        ticks: { 
+                            color: '#8b949e',
+                            stepSize: 20,
+                            callback: (value) => value
+                        }
+                    },
+                    y: {
+                        grid: { color: '#21262d' },
+                        ticks: { 
+                            color: '#8b949e',
+                            callback: (v) => v + '%'
+                        },
+                        min: 0,
+                        max: 280
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
