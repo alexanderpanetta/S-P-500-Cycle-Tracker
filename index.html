@@ -307,6 +307,7 @@
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 2rem;
+            overflow-x: auto;
         }
 
         .parallels-table {
@@ -472,7 +473,11 @@
         @media (max-width: 768px) {
             .score-panel { flex-direction: column; text-align: center; }
             .score-number { font-size: 4rem; }
-            .parallels-table { font-size: 0.8rem; }
+            .parallels-table { font-size: 0.75rem; min-width: 500px; }
+            .parallels-section { padding: 1rem; }
+            .summary-row { gap: 0.5rem; }
+            .summary-stat { min-width: 100px; padding: 0.5rem; }
+            .summary-value { font-size: 1rem; }
             .hero-section { height: 220px; }
         }
     </style>
@@ -498,10 +503,9 @@
                 <div class="score-label">Composite Score (0-100)</div>
             </div>
             <div class="score-context">
-                <div class="score-assessment" id="scoreAssessment">Historically High Stock Values</div>
+                <div class="score-assessment" id="scoreAssessment">Historically Extreme Valuations</div>
                 <p class="score-description" id="scoreDescription">
-                    Current readings place the market at the 98th percentile of historical valuations, 
-                    matching or exceeding previous bubble peaks in 1929, 2000, and 2021.
+                    A composite score of 98 matches the highest levels on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, cases.
                 </p>
             </div>
         </div>
@@ -667,9 +671,6 @@
                 <strong>Credit Spread:</strong> Moody's BAA minus 10-Year Treasury (BAA10Y) — 
                 <a href="https://fred.stlouisfed.org/series/BAA10Y" target="_blank">FRED</a>
             </div>
-            <div class="source-item">
-                <a href="https://www.macrotrends.net/2324/sp-500-historical-chart-data" target="_blank">MacroTrends</a> S&P 500 data helped calculate 1-year returns and maximum drawdowns for comparable historical periods.
-            </div>
         </div>
     </div>
 
@@ -708,17 +709,17 @@
                 const scoreDesc = document.getElementById('scoreDescription');
                 const scoreAssess = document.getElementById('scoreAssessment');
                 if (data.score >= 90) {
-                    scoreAssess.textContent = 'Historically High Stock Values';
-                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, matching or exceeding previous bubble peaks in 1929, 2000, and 2021.`;
+                    scoreAssess.textContent = 'Historically Extreme Valuations';
+                    scoreDesc.textContent = `A composite score of ${data.score} matches the highest levels on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, cases.`;
                 } else if (data.score >= 75) {
                     scoreAssess.textContent = 'Elevated Stock Values';
-                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, similar to levels seen before previous market corrections.`;
+                    scoreDesc.textContent = `A composite score of ${data.score} is in the high range, similar to levels seen before the 2007 financial crisis (87). Historically, such readings preceded significant corrections in most cases.`;
                 } else if (data.score >= 50) {
                     scoreAssess.textContent = 'Moderately High Stock Values';
-                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, above average but not at extreme levels.`;
+                    scoreDesc.textContent = `A composite score of ${data.score} is above average but not at extreme levels. Historical parallels show mixed outcomes from similar readings.`;
                 } else {
                     scoreAssess.textContent = 'Below Average Stock Values';
-                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, suggesting reasonable entry points historically.`;
+                    scoreDesc.textContent = `A composite score of ${data.score} suggests valuations are historically reasonable. Such readings have typically preceded positive returns.`;
                 }
                 
                 // Update S&P 500 ticker
@@ -779,60 +780,58 @@
         // Historical parallels data organized by score ranges
         const historicalParallels = {
             // Score 90-100: Extreme valuations (bubble territory)
+            // Composite = (CAPE pct + Buffett pct) / 2, or CAPE only pre-1947
             extreme: {
-                description: "Eras when CAPE reached the 90th percentile or higher. Peak valuations and subsequent S&P 500 performance:",
+                description: "Eras when composite score reached 90+. Peak valuations and subsequent S&P 500 performance:",
                 eras: [
-                    { year: "1929", context: "Pre-Great Depression", cape: 39.5, buffett: "N/A*", return1y: -33.6, maxDD: -67, fell20: true },
-                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 48.1, buffett: "172%", return1y: -22.6, maxDD: -49, fell20: true },
-                    { year: "2021", context: "Post-COVID Peak", cape: 42.0, buffett: "239%", return1y: -16.1, maxDD: -25, fell20: true },
-                    { year: "1901", context: "Turn of Century", cape: 30.2, buffett: "N/A*", return1y: -1.1, maxDD: -6.7, fell20: false }
+                    { year: "1929", context: "Pre-Great Depression", cape: 32.6, buffett: "N/A*", return1y: -33.6, maxDD: -84.8, fell20: true },
+                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 44.2, buffett: "159%", return1y: -6.8, maxDD: -40.2, fell20: true },
+                    { year: "2018", context: "Late Bull Market", cape: 33.3, buffett: "149%", return1y: -6.5, maxDD: -8.0, fell20: false },
+                    { year: "2021", context: "Post-COVID Peak", cape: 38.6, buffett: "200%", return1y: -16.1, maxDD: -20.2, fell20: true }
                 ],
-                summary: { eras: 4, fell20Pct: 75, median1y: -19, medianDD: -37 }
+                summary: { eras: 4, fell20Pct: 75, median1y: -12, medianDD: -30 }
             },
             // Score 75-89: High valuations
             high: {
-                description: "Eras when CAPE was in the 75th-90th percentile range. Peak valuations and subsequent S&P 500 performance:",
+                description: "Eras when composite score was 75-89. Peak valuations and subsequent S&P 500 performance:",
                 eras: [
-                    { year: "1937", context: "Pre-WWII Recovery", cape: 29.3, buffett: "N/A*", return1y: -35.0, maxDD: -49, fell20: true },
-                    { year: "1966", context: "Go-Go Years Peak", cape: 24.1, buffett: "78%", return1y: -10.1, maxDD: -22, fell20: true },
-                    { year: "2007", context: "Pre-Financial Crisis", cape: 29.5, buffett: "131%", return1y: -38.5, maxDD: -57, fell20: true },
-                    { year: "2018", context: "Late Bull Market", cape: 35.0, buffett: "161%", return1y: -6.2, maxDD: -20, fell20: false }
+                    { year: "1901", context: "Turn of Century", cape: 25.2, buffett: "N/A*", return1y: -1.1, maxDD: -26.4, fell20: true },
+                    { year: "1937", context: "Pre-Recession", cape: 22.2, buffett: "N/A*", return1y: -39.0, maxDD: -46.6, fell20: true },
+                    { year: "2007", context: "Pre-Financial Crisis", cape: 27.3, buffett: "118%", return1y: -37.1, maxDD: -50.8, fell20: true }
                 ],
-                summary: { eras: 4, fell20Pct: 75, median1y: -22, medianDD: -36 }
+                summary: { eras: 3, fell20Pct: 100, median1y: -37, medianDD: -47 }
             },
             // Score 50-74: Moderate valuations
             moderate: {
-                description: "Eras when CAPE was in the 50th-75th percentile range. Valuations and subsequent S&P 500 performance:",
+                description: "Eras when composite score was 50-74. Valuations and subsequent S&P 500 performance:",
                 eras: [
-                    { year: "1961-62", context: "Kennedy Era", cape: 22.0, buffett: "60%", return1y: -8.7, maxDD: -28, fell20: true },
-                    { year: "1987", context: "Pre-Black Monday", cape: 22.9, buffett: "60%", return1y: 2.0, maxDD: -34, fell20: true },
-                    { year: "1996", context: "Mid-90s Bull", cape: 25.0, buffett: "95%", return1y: 31.0, maxDD: -6, fell20: false },
-                    { year: "2014-15", context: "QE Era", cape: 27.0, buffett: "115%", return1y: -0.7, maxDD: -13, fell20: false }
+                    { year: "1906", context: "Pre-Panic", cape: 20.1, buffett: "N/A*", return1y: -3.1, maxDD: -36.7, fell20: true },
+                    { year: "1961", context: "Bull Peak", cape: 22.0, buffett: "62%", return1y: -12.7, maxDD: -22.5, fell20: true },
+                    { year: "1966", context: "Go-Go Peak", cape: 24.1, buffett: "78%", return1y: -9.5, maxDD: -17.3, fell20: false },
+                    { year: "1968", context: "Bull Peak", cape: 22.2, buffett: "87%", return1y: -8.7, maxDD: -28.3, fell20: true },
+                    { year: "1972", context: "Nifty Fifty", cape: 18.6, buffett: "81%", return1y: -19.3, maxDD: -42.9, fell20: true }
                 ],
-                summary: { eras: 4, fell20Pct: 50, median1y: -4, medianDD: -21 }
+                summary: { eras: 5, fell20Pct: 80, median1y: -10, medianDD: -28 }
             },
             // Score 25-49: Below average valuations
             belowAverage: {
-                description: "Eras when CAPE was in the 25th-50th percentile range. Valuations and subsequent S&P 500 performance:",
+                description: "Eras when composite score was 25-49. Valuations and subsequent S&P 500 performance:",
                 eras: [
-                    { year: "1953", context: "Post-Korean War", cape: 13.0, buffett: "45%", return1y: 45.0, maxDD: -3, fell20: false },
-                    { year: "1978", context: "Stagflation Era", cape: 10.4, buffett: "42%", return1y: 12.3, maxDD: -10, fell20: false },
-                    { year: "1988", context: "Post-Crash Recovery", cape: 15.0, buffett: "55%", return1y: 27.3, maxDD: -5, fell20: false },
-                    { year: "2010", context: "Post-Crisis Recovery", cape: 20.5, buffett: "85%", return1y: 12.8, maxDD: -16, fell20: false }
+                    { year: "1987", context: "Pre-Black Monday", cape: 18.3, buffett: "60%", return1y: -19.9, maxDD: -26.8, fell20: true }
                 ],
-                summary: { eras: 4, fell20Pct: 0, median1y: 13, medianDD: -8 }
+                summary: { eras: 1, fell20Pct: 100, median1y: -20, medianDD: -27 }
             },
             // Score 0-24: Low valuations (historically cheap)
             low: {
-                description: "Eras when CAPE was in the bottom 25th percentile. Valuations and subsequent S&P 500 performance:",
+                description: "Eras when composite score was below 25. These are market bottoms:",
                 eras: [
-                    { year: "1920-21", context: "Post-WWI Depression", cape: 6.6, buffett: "N/A*", return1y: 12.7, maxDD: -9, fell20: false },
-                    { year: "1932", context: "Great Depression Low", cape: 6.6, buffett: "N/A*", return1y: 53.8, maxDD: -8, fell20: false },
-                    { year: "1974", context: "Stagflation Bottom", cape: 7.7, buffett: "45%", return1y: 31.6, maxDD: -14, fell20: false },
-                    { year: "1982", context: "Volcker Bottom", cape: 7.4, buffett: "36%", return1y: 40.4, maxDD: -6, fell20: false },
-                    { year: "2009", context: "Financial Crisis Low", cape: 15.2, buffett: "57%", return1y: 23.5, maxDD: -7, fell20: false }
+                    { year: "1921", context: "Post-WWI Bottom", cape: 5.2, buffett: "N/A*", return1y: 29.0, maxDD: -1.5, fell20: false },
+                    { year: "1932", context: "Depression Bottom", cape: 5.6, buffett: "N/A*", return1y: 117.8, maxDD: 0, fell20: false },
+                    { year: "1949", context: "Post-War Bottom", cape: 9.1, buffett: "N/A*", return1y: 34.1, maxDD: 0, fell20: false },
+                    { year: "1974", context: "Stagflation Bottom", cape: 8.3, buffett: "40%", return1y: 32.2, maxDD: 0, fell20: false },
+                    { year: "1982", context: "Volcker Bottom", cape: 6.6, buffett: "32%", return1y: 48.0, maxDD: 0, fell20: false }
                 ],
-                summary: { eras: 5, fell20Pct: 0, median1y: 32, medianDD: -8 }
+                summary: { eras: 5, fell20Pct: 0, median1y: 34, medianDD: 0 }
             }
         };
 
@@ -876,7 +875,7 @@
                 </div>
                 <div class="summary-stat">
                     <div class="summary-value ${summary.fell20Pct > 50 ? 'negative' : summary.fell20Pct > 0 ? 'warning' : 'positive'}">${summary.fell20Pct}%</div>
-                    <div class="summary-label">Fell 20%+ in 18mo</div>
+                    <div class="summary-label">Fell 20%+ (3yr)</div>
                 </div>
                 <div class="summary-stat">
                     <div class="summary-value ${summary.median1y < 0 ? 'negative' : 'positive'}">${summary.median1y > 0 ? '+' : ''}${summary.median1y}%</div>
@@ -892,32 +891,32 @@
         // Fetch data on page load
         fetchAndUpdateData();
 
-        // CAPE data - more data points for smoother curve
+        // CAPE data - more data points for smoother curve (from Shiller dataset)
         const capeData = [
             { year: 1881, value: 18.5 },
             { year: 1890, value: 22.0 },
-            { year: 1901, value: 30.2 },
+            { year: 1901, value: 25.2 },
             { year: 1910, value: 15.0 },
-            { year: 1921, value: 6.6 },
-            { year: 1929, value: 39.5 },
-            { year: 1932, value: 6.6 },
-            { year: 1937, value: 29.3 },
-            { year: 1942, value: 9.0 },
+            { year: 1921, value: 5.2 },
+            { year: 1929, value: 32.6 },
+            { year: 1932, value: 5.6 },
+            { year: 1937, value: 22.2 },
+            { year: 1942, value: 8.5 },
             { year: 1950, value: 12.0 },
             { year: 1960, value: 18.0 },
             { year: 1966, value: 24.1 },
             { year: 1975, value: 10.0 },
-            { year: 1982, value: 7.4 },
-            { year: 1987, value: 22.9 },
+            { year: 1982, value: 6.6 },
+            { year: 1987, value: 18.3 },
             { year: 1995, value: 24.0 },
-            { year: 2000, value: 48.1 },
+            { year: 2000, value: 44.2 },
             { year: 2003, value: 22.0 },
-            { year: 2007, value: 29.5 },
-            { year: 2009, value: 15.2 },
+            { year: 2007, value: 27.3 },
+            { year: 2009, value: 13.3 },
             { year: 2015, value: 27.0 },
-            { year: 2018, value: 35.0 },
+            { year: 2018, value: 33.3 },
             { year: 2020, value: 31.0 },
-            { year: 2021, value: 42.0 },
+            { year: 2021, value: 38.6 },
             { year: 2023, value: 30.0 },
             { year: 2025, value: 38.2 }
         ];
