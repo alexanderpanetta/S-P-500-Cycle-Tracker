@@ -1,6 +1,7 @@
 {
-  "name": "sp500-backend",
+  "name": "sp500-cycle-tracker-api",
   "version": "1.0.0",
+  "description": "API for S&P 500 Cycle Tracker",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -8,6 +9,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "axios": "^1.6.0"
+    "node-fetch": "^2.7.0",
+    "xlsx": "^0.18.5"
   }
 }
