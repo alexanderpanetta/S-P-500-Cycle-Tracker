@@ -498,9 +498,9 @@
                 <div class="score-label">Composite Score (0-100)</div>
             </div>
             <div class="score-context">
-                <div class="score-assessment">Historically High Stock Values</div>
-                <p class="score-description">
-                    Current readings place the market at the 99th percentile of historical valuations, 
+                <div class="score-assessment" id="scoreAssessment">Historically High Stock Values</div>
+                <p class="score-description" id="scoreDescription">
+                    Current readings place the market at the 98th percentile of historical valuations, 
                     matching or exceeding previous bubble peaks in 1929, 2000, and 2021.
                 </p>
             </div>
@@ -703,6 +703,23 @@
                 
                 // Update composite score
                 document.getElementById('compositeScore').textContent = data.score;
+                
+                // Update score description to match
+                const scoreDesc = document.getElementById('scoreDescription');
+                const scoreAssess = document.getElementById('scoreAssessment');
+                if (data.score >= 90) {
+                    scoreAssess.textContent = 'Historically High Stock Values';
+                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, matching or exceeding previous bubble peaks in 1929, 2000, and 2021.`;
+                } else if (data.score >= 75) {
+                    scoreAssess.textContent = 'Elevated Stock Values';
+                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, similar to levels seen before previous market corrections.`;
+                } else if (data.score >= 50) {
+                    scoreAssess.textContent = 'Moderately High Stock Values';
+                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, above average but not at extreme levels.`;
+                } else {
+                    scoreAssess.textContent = 'Below Average Stock Values';
+                    scoreDesc.textContent = `Current readings place the market at the ${data.score}th percentile of historical valuations, suggesting reasonable entry points historically.`;
+                }
                 
                 // Update S&P 500 ticker
                 if (data.sp500) {
