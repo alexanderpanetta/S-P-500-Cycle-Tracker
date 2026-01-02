@@ -975,6 +975,7 @@
                         titleColor: '#e6edf3',
                         bodyColor: '#e6edf3',
                         callbacks: {
+                            title: (ctx) => ctx[0].parsed.x.toString(),
                             label: (ctx) => `CAPE: ${ctx.parsed.y.toFixed(1)}`
                         }
                     }
@@ -1027,6 +1028,7 @@
                         titleColor: '#e6edf3',
                         bodyColor: '#e6edf3',
                         callbacks: {
+                            title: (ctx) => ctx[0].parsed.x.toString(),
                             label: (ctx) => `Buffett: ${ctx.parsed.y}%`
                         }
                     }
