@@ -155,9 +155,10 @@
             padding: 2rem;
             margin-bottom: 1.5rem;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 2rem;
-            flex-wrap: wrap;
+            text-align: center;
+            gap: 1.5rem;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
@@ -165,7 +166,7 @@
 
         .score-number {
             font-family: 'Orbitron', sans-serif;
-            font-size: 5rem;
+            font-size: 6rem;
             font-weight: 700;
             line-height: 1;
             color: var(--accent-red);
@@ -178,7 +179,7 @@
             margin-top: 0.5rem;
         }
 
-        .score-context { flex: 1; min-width: 280px; }
+        .score-context { max-width: 700px; }
 
         .score-assessment {
             font-size: 1.1rem;
@@ -471,7 +472,6 @@
         }
 
         @media (max-width: 768px) {
-            .score-panel { flex-direction: column; text-align: center; }
             .score-number { font-size: 4rem; }
             .parallels-table { font-size: 0.75rem; min-width: 500px; }
             .parallels-section { padding: 1rem; }
@@ -633,6 +633,12 @@
                     yield investors demand for corporate bonds over Treasuries. Low spreads indicate complacency—investors 
                     aren't worried about defaults. Historically, spreads this low (19th percentile) have preceded major 
                     market peaks, though they don't predict timing.
+                </p>
+
+                <p>
+                    <strong>Historical Parallels</strong> shows past eras with similar composite scores. <em>Max Drawdown</em> is 
+                    the largest peak-to-trough S&P 500 decline within 3 years of the peak. <em>Fell 20%+</em> indicates whether 
+                    the market entered a bear market (20%+ decline) within that same 3-year window.
                 </p>
 
                 <div class="caveat">
