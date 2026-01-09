@@ -11,7 +11,7 @@ const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
 const FRED_API_KEY = process.env.FRED_API_KEY || 'f70e01eb152c2ee5828ff8d457ff3e4f';
 
 // Shiller data URL (Excel file from shillerdata.com)
-const SHILLER_URL = 'https://shillerdata.com/ie_data.xls';
+const SHILLER_URL = 'https://img1.wsimg.com/blobby/go/e5e77e0b-59d1-44d9-ab25-4763ac982e53/downloads/1b9b0a8a-aa83-40bc-a151-c19ef387b564/ie_data.xls';
 
 // Cache storage
 const cache = {
