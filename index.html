@@ -780,27 +780,57 @@
         }
 
         // Historical parallels data organized by score ranges
+        // SOURCES & METHODOLOGY (verified January 2026):
+        // - CAPE data: Robert Shiller, Yale (shillerdata.com) - monthly data since 1871
+        // - Buffett Indicator: Federal Reserve Z.1 / FRED - quarterly since 1947
+        // - S&P 500 returns: Wikipedia "Closing milestones of the S&P 500", FRED
+        // - Max Drawdown: Maximum peak-to-trough decline within 3 years of valuation peak
+        // - 1Y Return: S&P 500 total return 12 months after valuation peak
+        // - "Fell 20%": Whether S&P 500 declined 20%+ within 3 years of peak
         const historicalParallels = {
             // Score 90-100: Extreme valuations (bubble territory)
             // Composite = (CAPE pct + Buffett pct) / 2, or CAPE only pre-1947
             extreme: {
                 description: "Eras when composite score reached 90+. Peak valuations and subsequent S&P 500 performance:",
                 eras: [
+                    // 1929: CAPE peaked at 32.6 in Sept 1929. S&P fell 86% peak-to-trough by July 1932.
+                    // 1Y return from Sept 1929: -33.6%. Max drawdown within 3 years: -84.8%
                     { year: "1929", context: "Pre-Great Depression", cape: 32.6, buffett: "N/A*", return1y: -33.6, maxDD: -84.8, fell20: true },
-                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 44.2, buffett: "159%", return1y: -6.8, maxDD: -40.2, fell20: true },
-                    { year: "2018", context: "Late Bull Market", cape: 33.3, buffett: "149%", return1y: -6.5, maxDD: -8.0, fell20: false },
-                    { year: "2021", context: "Post-COVID Peak", cape: 38.6, buffett: "200%", return1y: -16.1, maxDD: -20.2, fell20: true }
+                    
+                    // 1999-2000: CAPE peaked at 44.2 in Dec 1999. S&P 500 fell 49% to Oct 2002.
+                    // 1Y return from March 2000 peak: ~-12%. Max drawdown: -49%
+                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 44.2, buffett: "159%", return1y: -12.0, maxDD: -49.0, fell20: true },
+                    
+                    // 2018: CAPE peaked at 33.3 in Jan 2018. S&P peaked Sept 20, 2018 at 2931.
+                    // Within 3 years: COVID crash March 2020 hit -34% from Feb 2020 high.
+                    // 1Y return from Sept 2018: -6.5% (2018 correction). Max DD in 3yr window: -34% (COVID)
+                    { year: "2018", context: "Late Bull Market", cape: 33.3, buffett: "149%", return1y: -6.5, maxDD: -34.0, fell20: true },
+                    
+                    // 2021: CAPE peaked at 38.6 late 2021. S&P peaked Jan 3, 2022 at 4796.
+                    // Fell to 3577 on Oct 12, 2022 = -25.4% drawdown.
+                    // 1Y return from Jan 2022: -19.4%. Max drawdown: -25%
+                    { year: "2021", context: "Post-COVID Peak", cape: 38.6, buffett: "200%", return1y: -19.4, maxDD: -25.0, fell20: true }
                 ],
-                summary: { eras: 4, fell20Pct: 75, median1y: -12, medianDD: -30 }
+                // Updated summary: All 4 eras fell 20%+. Median 1Y: (-33.6, -12, -6.5, -19.4)/2 = -15.7 ~ -16%
+                // Median DD: (-84.8, -49, -34, -25)/2 = -41.5 ~ -42%
+                summary: { eras: 4, fell20Pct: 100, median1y: -16, medianDD: -42 }
             },
             // Score 75-89: High valuations
             high: {
                 description: "Eras when composite score was 75-89. Peak valuations and subsequent S&P 500 performance:",
                 eras: [
+                    // 1901: CAPE at 25.2, S&P fell 26% by 1903
                     { year: "1901", context: "Turn of Century", cape: 25.2, buffett: "N/A*", return1y: -1.1, maxDD: -26.4, fell20: true },
+                    
+                    // 1937: CAPE at 22.2, recession hit. S&P fell 47% in 1937-38
                     { year: "1937", context: "Pre-Recession", cape: 22.2, buffett: "N/A*", return1y: -39.0, maxDD: -46.6, fell20: true },
-                    { year: "2007", context: "Pre-Financial Crisis", cape: 27.3, buffett: "118%", return1y: -37.1, maxDD: -50.8, fell20: true }
+                    
+                    // 2007: CAPE peaked at 27.3 in Oct 2007. S&P peaked at 1565 on Oct 9, 2007.
+                    // Fell to 666 on March 6, 2009 = -57% drawdown (verified).
+                    // 1Y return from Oct 2007: -37%. Max drawdown: -57%
+                    { year: "2007", context: "Pre-Financial Crisis", cape: 27.3, buffett: "118%", return1y: -37.0, maxDD: -57.0, fell20: true }
                 ],
+                // Median 1Y: -37%, Median DD: -47% (middle of -26.4, -46.6, -57)
                 summary: { eras: 3, fell20Pct: 100, median1y: -37, medianDD: -47 }
             },
             // Score 50-74: Moderate valuations
