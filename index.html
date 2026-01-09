@@ -793,27 +793,30 @@
             extreme: {
                 description: "Eras when composite score reached 90+. Peak valuations and subsequent S&P 500 performance:",
                 eras: [
-                    // 1929: CAPE peaked at 32.6 in Sept 1929. S&P fell 86% peak-to-trough by July 1932.
-                    // 1Y return from Sept 1929: -33.6%. Max drawdown within 3 years: -84.8%
-                    { year: "1929", context: "Pre-Great Depression", cape: 32.6, buffett: "N/A*", return1y: -33.6, maxDD: -84.8, fell20: true },
+                    // 1929: CAPE peaked at 32.6 in Sept 1929. S&P at 31.30.
+                    // Sept 1930: 20.78. 1Y return: -33.6%. 
+                    // July 1932 low: 5.01 = -84% (within 3yr window)
+                    { year: "1929", context: "Pre-Great Depression", cape: 32.6, buffett: "N/A*", return1y: -33.6, maxDD: -84.0, fell20: true },
                     
-                    // 1999-2000: CAPE peaked at 44.2 in Dec 1999. S&P 500 fell 49% to Oct 2002.
-                    // 1Y return from March 2000 peak: ~-12%. Max drawdown: -49%
-                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 44.2, buffett: "159%", return1y: -12.0, maxDD: -49.0, fell20: true },
+                    // 1999-2000: CAPE peaked at 44.2 in Dec 1999. S&P peaked March 24, 2000 at 1,552.87.
+                    // 1Y later (March 2001): 1,185.85. 1Y return: -24% 
+                    // Oct 2002 low: 768.83. Max drawdown: -50%
+                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 44.2, buffett: "159%", return1y: -24.0, maxDD: -50.0, fell20: true },
                     
-                    // 2018: CAPE peaked at 33.3 in Jan 2018. S&P peaked Sept 20, 2018 at 2931.
-                    // Within 3 years: COVID crash March 2020 hit -34% from Feb 2020 high.
-                    // 1Y return from Sept 2018: -6.5% (2018 correction). Max DD in 3yr window: -34% (COVID)
-                    { year: "2018", context: "Late Bull Market", cape: 33.3, buffett: "149%", return1y: -6.5, maxDD: -34.0, fell20: true },
+                    // 2018: CAPE peaked at 33.3 in Jan 2018. S&P peaked Sept 20, 2018 at 2,931.
+                    // 1Y later (Sept 2019): 2,982. 1Y return: +3% (market recovered!)
+                    // COVID low March 2020: 2,237 intraday. Max DD: -24%
+                    { year: "2018", context: "Late Bull Market", cape: 33.3, buffett: "149%", return1y: 3.0, maxDD: -24.0, fell20: true },
                     
-                    // 2021: CAPE peaked at 38.6 late 2021. S&P peaked Jan 3, 2022 at 4796.
-                    // Fell to 3577 on Oct 12, 2022 = -25.4% drawdown.
-                    // 1Y return from Jan 2022: -19.4%. Max drawdown: -25%
-                    { year: "2021", context: "Post-COVID Peak", cape: 38.6, buffett: "200%", return1y: -19.4, maxDD: -25.0, fell20: true }
+                    // 2021: CAPE peaked at 38.6 late 2021. S&P peaked Jan 3, 2022 at 4,796.
+                    // 1Y later (Jan 2023): 3,960. 1Y return: -17%
+                    // Oct 12, 2022 low: 3,577. Max drawdown: -25%
+                    { year: "2021", context: "Post-COVID Peak", cape: 38.6, buffett: "200%", return1y: -17.0, maxDD: -25.0, fell20: true }
                 ],
-                // Updated summary: All 4 eras fell 20%+. Median 1Y: (-33.6, -12, -6.5, -19.4)/2 = -15.7 ~ -16%
-                // Median DD: (-84.8, -49, -34, -25)/2 = -41.5 ~ -42%
-                summary: { eras: 4, fell20Pct: 100, median1y: -16, medianDD: -42 }
+                // Summary: All 4 fell 20%+. 
+                // Median 1Y: sorted [-33.6, -24, -17, +3] → median of middle two = (-24 + -17)/2 = -20.5 ~ -21%
+                // Median DD: sorted [-84, -50, -25, -24] → median = (-50 + -25)/2 = -37.5 ~ -38%
+                summary: { eras: 4, fell20Pct: 100, median1y: -21, medianDD: -38 }
             },
             // Score 75-89: High valuations
             high: {
