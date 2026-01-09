@@ -94,8 +94,36 @@ async function fetchShillerData() {
         const buffer = Buffer.from(arrayBuffer);
         
         const workbook = XLSX.read(buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0]; // Usually "Data"
-        const sheet = workbook.Sheets[sheetName];
+        
+        console.log('Available sheets:', workbook.SheetNames);
+        
+        // Find the sheet with data - try "Data" first, then the largest sheet
+        let sheetName = workbook.SheetNames.find(name => name.toLowerCase() === 'data') 
+                     || workbook.SheetNames.find(name => name.toLowerCase().includes('data'))
+                     || workbook.SheetNames[0];
+        
+        // If first sheet is small (like a disclaimer), try the next one
+        let sheet = workbook.Sheets[sheetName];
+        let data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        
+        console.log('Trying sheet:', sheetName, 'rows:', data.length);
+        
+        // If this sheet has very few rows, try other sheets
+        if (data.length < 50 && workbook.SheetNames.length > 1) {
+            for (const name of workbook.SheetNames) {
+                if (name === sheetName) continue;
+                const testSheet = workbook.Sheets[name];
+                const testData = XLSX.utils.sheet_to_json(testSheet, { header: 1 });
+                console.log('Trying sheet:', name, 'rows:', testData.length);
+                if (testData.length > data.length) {
+                    sheetName = name;
+                    sheet = testSheet;
+                    data = testData;
+                }
+            }
+        }
+        
+        console.log('Using sheet:', sheetName, 'with', data.length, 'rows');
         
         // Convert to JSON
         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
