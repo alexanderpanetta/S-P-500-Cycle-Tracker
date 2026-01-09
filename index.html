@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EJEM1E7S92"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-EJEM1E7S92');
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Market Cycle Tracker</title>
@@ -508,13 +499,13 @@
         <!-- Composite Score -->
         <div class="score-panel">
             <div class="score-display">
-                <div class="score-number" id="compositeScore">98</div>
+                <div class="score-number" id="compositeScore">99.5</div>
                 <div class="score-label">Composite Score (0-100)</div>
             </div>
             <div class="score-context">
                 <div class="score-assessment" id="scoreAssessment">Historically Extreme Valuations</div>
                 <p class="score-description" id="scoreDescription">
-                    A composite score of 98 matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.
+                    A composite score of 99.5 matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.
                 </p>
             </div>
         </div>
@@ -534,8 +525,8 @@
                     <span class="indicator-name">CAPE Ratio (Shiller P/E)</span>
                     <div class="indicator-dot dot-red"></div>
                 </div>
-                <div class="indicator-value" id="capeValue">38.2</div>
-                <div class="indicator-meta"><span id="capePercentile">97</span>th percentile since 1881</div>
+                <div class="indicator-value" id="capeValue">39.9</div>
+                <div class="indicator-meta"><span id="capePercentile">99</span>th percentile since 1881</div>
                 <div class="percentile-bar">
                     <div class="percentile-fill" id="capeFill" style="width: 97%; background: var(--accent-red);"></div>
                 </div>
@@ -700,11 +691,11 @@
         // API endpoint - update this to your deployed backend URL
         const API_BASE = 'https://s-p-500-cycle-tracker-production.up.railway.app';
         
-        // Fallback static data
+        // Fallback static data (updated Jan 2026 from Shiller data)
         const STATIC_DATA = {
-            score: 98,
-            sp500: { value: 6845.50, timestamp: 'Dec 31 close' },
-            cape: { value: 38.2, percentile: 97 },
+            score: 99.5,
+            sp500: { value: 5970.84, timestamp: 'Jan 8 close' },
+            cape: { value: 39.9, percentile: 99 },
             buffett: { value: 239, percentile: 99 },
             creditSpread: { value: 1.75, percentile: 24 }
         };
@@ -929,7 +920,7 @@
             { year: 2020, value: 31.0 },
             { year: 2021, value: 38.6 },
             { year: 2023, value: 30.0 },
-            { year: 2025, value: 38.2 }
+            { year: 2025, value: 39.9 }
         ];
 
         // Buffett data (1947-2025) - actual data points
