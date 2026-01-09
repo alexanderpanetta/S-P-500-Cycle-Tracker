@@ -309,7 +309,7 @@ app.get('/api/indicators', async (req, res) => {
         const buffettPercentile = HISTORICAL.buffett.getPercentile(buffettValue);
 
         // Composite score = average of CAPE and Buffett percentiles
-        const compositeScore = Math.round((capePercentile + buffettPercentile) / 2);
+        const compositeScore = Math.round((capePercentile + buffettPercentile) / 2 * 2) / 2; // Round to nearest 0.5
 
         // Get S&P 500 price from FRED
         const sp500Value = parseFloat(sp500Response.observations[0].value);
