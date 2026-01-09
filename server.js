@@ -100,45 +100,35 @@ async function fetchShillerData() {
         // Convert to JSON
         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
         
+        console.log('Excel parsed, total rows:', data.length);
+        console.log('First few rows:', JSON.stringify(data.slice(0, 10), null, 2));
+        
         // Find the CAPE column and get latest value
-        // Shiller's format: Date, S&P, Dividend, Earnings, CPI, Date Fraction, Long Rate, Real Price, Real Dividend, Real Earnings, CAPE
-        // The header row varies, so we search for it
+        // Shiller's format has CAPE in column M (index 12)
+        // The header is multi-line, so we'll just use the known column index
         
-        let capeColumnIndex = -1;
-        let headerRowIndex = -1;
+        let capeColumnIndex = 12; // Column M in Excel (0-indexed)
+        let headerRowIndex = 8;   // Data starts at row 9 (0-indexed = 8)
         
-        // Find header row containing "CAPE" or "P/E10" or "Cyclically Adjusted"
-        for (let i = 0; i < Math.min(data.length, 20); i++) {
-            const row = data[i];
-            if (row) {
-                for (let j = 0; j < row.length; j++) {
-                    const cell = String(row[j] || '').toLowerCase();
-                    if (cell.includes('cape') || cell.includes('p/e10') || cell.includes('cyclically')) {
-                        capeColumnIndex = j;
-                        headerRowIndex = i;
-                        break;
-                    }
-                }
-                if (capeColumnIndex >= 0) break;
-            }
-        }
-        
-        // If we couldn't find CAPE header, try column index 10 (typical position)
-        if (capeColumnIndex < 0) {
-            capeColumnIndex = 10;
-            headerRowIndex = 7; // Typical header row
-        }
+        console.log('Using CAPE column index:', capeColumnIndex);
         
         // Get the latest non-empty CAPE value
         let latestCape = null;
         let latestDate = null;
         
+        // Log last few rows to debug
+        console.log('Last 5 rows:', JSON.stringify(data.slice(-5), null, 2));
+        
         for (let i = data.length - 1; i > headerRowIndex; i--) {
             const row = data[i];
-            if (row && row[capeColumnIndex] && !isNaN(parseFloat(row[capeColumnIndex]))) {
-                latestCape = parseFloat(row[capeColumnIndex]);
-                latestDate = row[0]; // Date is usually first column
-                break;
+            if (row && row[capeColumnIndex] !== undefined && row[capeColumnIndex] !== null && row[capeColumnIndex] !== '') {
+                const capeValue = parseFloat(row[capeColumnIndex]);
+                if (!isNaN(capeValue) && capeValue > 0) {
+                    latestCape = capeValue;
+                    latestDate = row[0]; // Date is usually first column
+                    console.log('Found CAPE value:', latestCape, 'at row', i, 'date:', latestDate);
+                    break;
+                }
             }
         }
         
