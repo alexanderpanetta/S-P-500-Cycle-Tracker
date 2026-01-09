@@ -55,7 +55,7 @@ const HISTORICAL = {
             const percentiles = [
                 { value: 35, pct: 0 }, { value: 50, pct: 15 }, { value: 70, pct: 35 },
                 { value: 85, pct: 50 }, { value: 110, pct: 70 }, { value: 140, pct: 85 },
-                { value: 175, pct: 93 }, { value: 200, pct: 97 }, { value: 250, pct: 100 }
+                { value: 175, pct: 93 }, { value: 200, pct: 97 }, { value: 240, pct: 100 }
             ];
             return interpolatePercentile(value, percentiles);
         }
