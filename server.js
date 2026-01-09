@@ -125,9 +125,6 @@ async function fetchShillerData() {
         
         console.log('Using sheet:', sheetName, 'with', data.length, 'rows');
         
-        // Convert to JSON
-        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        
         console.log('Excel parsed, total rows:', data.length);
         console.log('First few rows:', JSON.stringify(data.slice(0, 10), null, 2));
         
