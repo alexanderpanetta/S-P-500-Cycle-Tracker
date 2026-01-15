@@ -306,6 +306,7 @@ app.get('/api/indicators', async (req, res) => {
         const marketCap = parseFloat(mcData.observations[0].value);
         const gdp = parseFloat(gdpData.observations[0].value) * 1000;
         const buffettValue = Math.round((marketCap / gdp) * 100);
+        console.log('Buffett calc:', { marketCap, gdp, buffettValue, mcDate: mcData.observations[0].date, gdpDate: gdpData.observations[0].date });
         const buffettPercentile = HISTORICAL.buffett.getPercentile(buffettValue);
 
         // Composite score = average of CAPE and Buffett percentiles
