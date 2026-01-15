@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,501 +7,499 @@
     <meta name="description" content="Real-time stock market valuation dashboard using Shiller CAPE and Buffett Indicator with 140+ years of historical context. See where current valuations stand relative to history.">
     <meta name="author" content="Alex Panetta">
     <meta name="keywords" content="stock market, CAPE ratio, Shiller PE, Buffett Indicator, market valuation, stock market crash, market cycle, P/E ratio">
-
-
-<!-- Open Graph -->
-<meta property="og:title" content="Stock Market Cycle Tracker | Real-Time Valuation Dashboard">
-<meta property="og:description" content="Real-time market valuation analysis using Shiller CAPE and Buffett Indicator with 140+ years of historical context.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.marketcalculator.net">
-<meta property="og:site_name" content="Stock Market Cycle Tracker">
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Stock Market Cycle Tracker | Real-Time Valuation Dashboard">
-<meta name="twitter:description" content="Real-time market valuation analysis using Shiller CAPE and Buffett Indicator with 140+ years of historical context.">
-
-<!-- Canonical -->
-<link rel="canonical" href="https://www.marketcalculator.net">
-
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-<style>
-    :root {
-        --bg-primary: #0d1117;
-        --bg-secondary: #161b22;
-        --bg-card: #21262d;
-        --text-primary: #e6edf3;
-        --text-secondary: #8b949e;
-        --text-muted: #484f58;
-        --accent-red: #f85149;
-        --accent-orange: #d29922;
-        --accent-yellow: #e3b341;
-        --accent-green: #3fb950;
-        --accent-blue: #58a6ff;
-        --border-color: #30363d;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-        font-family: 'IBM Plex Sans', -apple-system, sans-serif;
-        background: linear-gradient(180deg, #0a0e14 0%, #0d1117 15%, #0d1117 100%);
-        color: var(--text-primary);
-        min-height: 100vh;
-        line-height: 1.5;
-    }
-
-    .hero-section {
-        position: relative;
-        width: 100%;
-        height: 280px;
-        overflow: hidden;
-        margin-bottom: 0;
-    }
-
-    .hero-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-        filter: brightness(0.6) contrast(1.1);
-    }
-
-    .hero-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-            to bottom,
-            rgba(13, 17, 23, 0.3) 0%,
-            rgba(13, 17, 23, 0.5) 50%,
-            rgba(13, 17, 23, 0.95) 85%,
-            rgba(13, 17, 23, 1) 100%
-        );
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
-    }
-
-    .hero-title {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #ffffff;
-        text-shadow: 0 0 30px rgba(248, 81, 73, 0.5), 0 0 60px rgba(248, 81, 73, 0.3);
-        margin-bottom: 0.5rem;
-        text-align: center;
-    }
-
-    .hero-subtitle {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.9rem;
-        color: #8b949e;
-        letter-spacing: 0.05em;
-        text-align: center;
-    }
-
-    .hero-live {
-        display: inline;
-        font-size: 0.7rem;
-        color: var(--accent-green);
-        margin-top: 0.5rem;
-    }
-
-    .container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-    }
-
-    /* S&P 500 Ticker */
-    .sp500-ticker {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        padding: 0.75rem 1.5rem;
-        margin-bottom: 1.5rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        font-family: 'IBM Plex Mono', monospace;
-    }
-
-    .ticker-label {
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .ticker-value {
-        color: var(--text-primary);
-        font-size: 1.25rem;
-        font-weight: 600;
-    }
-
-    .ticker-change {
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .ticker-change.up {
-        color: var(--accent-green);
-    }
-
-    .ticker-change.down {
-        color: var(--accent-red);
-    }
-
-    .ticker-timestamp {
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        margin-left: 0.5rem;
-    }
-
-    /* Score Panel */
-    .score-panel {
-        background: linear-gradient(135deg, #161b22 0%, #1a1f26 50%, #161b22 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .score-display { text-align: center; }
-
-    .score-number {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 6rem;
-        font-weight: 700;
-        line-height: 1;
-        color: var(--accent-red);
-        text-shadow: 0 0 20px rgba(248, 81, 73, 0.4);
-    }
-
-    .score-label {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-    }
-
-    .score-context { max-width: 700px; }
-
-    .score-assessment {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--accent-red);
-        margin-bottom: 0.75rem;
-    }
-
-    .score-description {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        line-height: 1.6;
-    }
-
-    /* Indicators Grid */
-    .indicators-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .indicator-card {
-        background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.25rem;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .indicator-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    .indicator-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .indicator-name {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-    }
-
-    .indicator-dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    .dot-red { background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
-
-    .indicator-value {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 2rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .indicator-meta {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        line-height: 1.4;
-    }
-
-    .percentile-bar {
-        height: 4px;
-        background: var(--bg-card);
-        border-radius: 2px;
-        margin-top: 0.75rem;
-        overflow: hidden;
-    }
-
-    .percentile-fill { 
-        height: 100%; 
-        border-radius: 2px;
-        transition: width 1s ease-out;
-    }
-
-    /* Charts Section */
-    .charts-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    @media (max-width: 900px) {
-        .charts-grid { grid-template-columns: 1fr; }
-        .hero-title { font-size: 1.75rem; }
-    }
-
-    .chart-section {
-        background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.25rem;
-    }
-
-    .section-title {
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-    }
-
-    .chart-container {
-        position: relative;
-        height: 280px;
-    }
-
-    /* Parallels Section */
-    .parallels-section {
-        background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        overflow-x: auto;
-    }
-
-    .parallels-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-        font-size: 0.9rem;
-    }
-
-    .parallels-table th {
-        text-align: left;
-        padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid var(--border-color);
-        color: var(--text-secondary);
-        font-weight: 500;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-    }
-
-    .parallels-table td {
-        padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid var(--bg-card);
-    }
-
-    .parallels-table tr:last-child td { border-bottom: none; }
-
-    .era-name { font-weight: 600; font-size: 1rem; }
-    .era-context { font-size: 0.75rem; color: var(--text-muted); }
-
-    .mono { font-family: 'IBM Plex Mono', monospace; }
-    .negative { color: var(--accent-red); }
-    .positive { color: var(--accent-green); }
-    .warning { color: var(--accent-orange); }
-    .muted { color: var(--text-muted); }
-    .fell-yes { color: var(--accent-red); font-weight: 600; }
-    .fell-no { color: var(--accent-green); }
-
-    /* Summary Stats */
-    .summary-row {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
-        flex-wrap: wrap;
-    }
-
-    .summary-stat {
-        background: var(--bg-card);
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
-        text-align: center;
-        flex: 1;
-        min-width: 120px;
-    }
-
-    .summary-value {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 1.25rem;
-        font-weight: 600;
-    }
-
-    .summary-label {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        margin-top: 0.25rem;
-    }
-
-    .footnote {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        margin-top: 1rem;
-        line-height: 1.5;
-    }
-
-    /* Methodology Section */
-    .methodology-section {
-        background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .methodology-section h2 {
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-
-    .methodology-content {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        line-height: 1.7;
-    }
-
-    .methodology-content p {
-        margin-bottom: 0.75rem;
-    }
-
-    .methodology-content strong {
-        color: var(--text-primary);
-    }
-
-    .caveat {
-        background: var(--bg-card);
-        border-left: 3px solid var(--accent-orange);
-        padding: 0.75rem 1rem;
-        margin: 1rem 0;
-        font-size: 0.85rem;
-    }
-
-    /* Sources */
-    .sources {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        padding: 1.25rem;
-        background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        margin-bottom: 2rem;
-    }
-
-    .sources-title {
-        color: var(--text-primary);
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-    }
-
-    .sources a {
-        color: var(--accent-blue);
-        text-decoration: none;
-    }
-
-    .sources a:hover {
-        text-decoration: underline;
-    }
-
-    .source-item {
-        margin-bottom: 0.5rem;
-    }
-
-    /* Footer */
-    .footer {
-        text-align: center;
-        padding: 2rem 1.5rem;
-        border-top: 1px solid var(--border-color);
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        line-height: 1.6;
-    }
-
-    .footer a {
-        color: var(--accent-blue);
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .footer a:hover {
-        text-decoration: underline;
-    }
-
-    @media (max-width: 768px) {
-        .score-number { font-size: 4rem; }
-        .parallels-table { font-size: 0.75rem; min-width: 500px; }
-        .parallels-section { padding: 1rem; }
-        .summary-row { gap: 0.5rem; }
-        .summary-stat { min-width: 100px; padding: 0.5rem; }
-        .summary-value { font-size: 1rem; }
-        .hero-section { height: 220px; }
-    }
-</style>
-
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Stock Market Cycle Tracker | Real-Time Valuation Dashboard">
+    <meta property="og:description" content="Real-time market valuation analysis using Shiller CAPE and Buffett Indicator with 140+ years of historical context.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.marketcalculator.net">
+    <meta property="og:site_name" content="Stock Market Cycle Tracker">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Stock Market Cycle Tracker | Real-Time Valuation Dashboard">
+    <meta name="twitter:description" content="Real-time market valuation analysis using Shiller CAPE and Buffett Indicator with 140+ years of historical context.">
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="https://www.marketcalculator.net">
+    
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            --accent-red: #f85149;
+            --accent-orange: #d29922;
+            --accent-yellow: #e3b341;
+            --accent-green: #3fb950;
+            --accent-blue: #58a6ff;
+            --border-color: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: linear-gradient(180deg, #0a0e14 0%, #0d1117 15%, #0d1117 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            filter: brightness(0.6) contrast(1.1);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(13, 17, 23, 0.3) 0%,
+                rgba(13, 17, 23, 0.5) 50%,
+                rgba(13, 17, 23, 0.95) 85%,
+                rgba(13, 17, 23, 1) 100%
+            );
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #ffffff;
+            text-shadow: 0 0 30px rgba(248, 81, 73, 0.5), 0 0 60px rgba(248, 81, 73, 0.3);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            color: #8b949e;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+
+        .hero-live {
+            display: inline;
+            font-size: 0.7rem;
+            color: var(--accent-green);
+            margin-top: 0.5rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* S&P 500 Ticker */
+        .sp500-ticker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .ticker-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .ticker-value {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .ticker-change {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .ticker-change.up {
+            color: var(--accent-green);
+        }
+
+        .ticker-change.down {
+            color: var(--accent-red);
+        }
+
+        .ticker-timestamp {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Score Panel */
+        .score-panel {
+            background: linear-gradient(135deg, #161b22 0%, #1a1f26 50%, #161b22 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-display { text-align: center; }
+
+        .score-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 6rem;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--accent-red);
+            text-shadow: 0 0 20px rgba(248, 81, 73, 0.4);
+        }
+
+        .score-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .score-context { max-width: 700px; }
+
+        .score-assessment {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-red);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Indicators Grid */
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .indicator-card {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .indicator-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .indicator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .indicator-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .indicator-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dot-red { background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
+
+        .indicator-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .indicator-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .percentile-bar {
+            height: 4px;
+            background: var(--bg-card);
+            border-radius: 2px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .percentile-fill { 
+            height: 100%; 
+            border-radius: 2px;
+            transition: width 1s ease-out;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 1.75rem; }
+        }
+
+        .chart-section {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        /* Parallels Section */
+        .parallels-section {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .parallels-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .parallels-table th {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .parallels-table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--bg-card);
+        }
+
+        .parallels-table tr:last-child td { border-bottom: none; }
+
+        .era-name { font-weight: 600; font-size: 1rem; }
+        .era-context { font-size: 0.75rem; color: var(--text-muted); }
+
+        .mono { font-family: 'IBM Plex Mono', monospace; }
+        .negative { color: var(--accent-red); }
+        .positive { color: var(--accent-green); }
+        .warning { color: var(--accent-orange); }
+        .muted { color: var(--text-muted); }
+        .fell-yes { color: var(--accent-red); font-weight: 600; }
+        .fell-no { color: var(--accent-green); }
+
+        /* Summary Stats */
+        .summary-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .summary-stat {
+            background: var(--bg-card);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .summary-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .footnote {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Methodology Section */
+        .methodology-section {
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .methodology-section h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .methodology-content {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .methodology-content p {
+            margin-bottom: 0.75rem;
+        }
+
+        .methodology-content strong {
+            color: var(--text-primary);
+        }
+
+        .caveat {
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent-orange);
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+
+        /* Sources */
+        .sources {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .sources-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .sources a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .sources a:hover {
+            text-decoration: underline;
+        }
+
+        .source-item {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .score-number { font-size: 4rem; }
+            .parallels-table { font-size: 0.75rem; min-width: 500px; }
+            .parallels-section { padding: 1rem; }
+            .summary-row { gap: 0.5rem; }
+            .summary-stat { min-width: 100px; padding: 0.5rem; }
+            .summary-value { font-size: 1rem; }
+            .hero-section { height: 220px; }
+        }
+    </style>
 </head>
 <body>
     <!-- Hero Section with Bull/Bear Image -->
@@ -516,608 +513,607 @@
         </div>
     </div>
 
-<div class="container">
+    <div class="container">
 
-    <!-- Composite Score -->
-    <div class="score-panel">
-        <div class="score-display">
-            <div class="score-number" id="compositeScore">99</div>
-            <div class="score-label">Composite Score (0-100)</div>
+        <!-- Composite Score -->
+        <div class="score-panel">
+            <div class="score-display">
+                <div class="score-number" id="compositeScore">99</div>
+                <div class="score-label">Composite Score (0-100)</div>
+            </div>
+            <div class="score-context">
+                <div class="score-assessment" id="scoreAssessment">Historically Extreme Valuations</div>
+                <p class="score-description" id="scoreDescription">
+                    A composite score of 99 matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.
+                </p>
+            </div>
         </div>
-        <div class="score-context">
-            <div class="score-assessment" id="scoreAssessment">Historically Extreme Valuations</div>
-            <p class="score-description" id="scoreDescription">
-                A composite score of 99 matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.
+
+        <!-- S&P 500 Current Value -->
+        <div class="sp500-ticker">
+            <span class="ticker-label">S&P 500</span>
+            <span class="ticker-value" id="sp500Value">—</span>
+            <span class="ticker-change" id="sp500Change"></span>
+            <span class="ticker-timestamp" id="sp500Timestamp"></span>
+        </div>
+
+        <!-- Indicator Cards -->
+        <div class="indicators-grid">
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <span class="indicator-name">CAPE Ratio (Shiller P/E)</span>
+                    <div class="indicator-dot dot-red"></div>
+                </div>
+                <div class="indicator-value" id="capeValue">39.9</div>
+                <div class="indicator-meta"><span id="capePercentile">98</span>th percentile since 1881</div>
+                <div class="percentile-bar">
+                    <div class="percentile-fill" id="capeFill" style="width: 97%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <span class="indicator-name">Buffett Indicator*</span>
+                    <div class="indicator-dot dot-red"></div>
+                </div>
+                <div class="indicator-value" id="buffettValue">260%</div>
+                <div class="indicator-meta" id="buffettPercentile">All-time high (data since 1947)</div>
+                <div class="percentile-bar">
+                    <div class="percentile-fill" id="buffettFill" style="width: 100%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <span class="indicator-name">Credit Spread (BAA-10Y)</span>
+                    <div class="indicator-dot dot-red"></div>
+                </div>
+                <div class="indicator-value" id="creditValue">1.69%</div>
+                <div class="indicator-meta"><span id="creditPercentile">19</span>th percentile — low spreads signal complacency.<br>Similar lows preceded peaks in '87, '00, '07, '21</div>
+                <div class="percentile-bar">
+                    <div class="percentile-fill" id="creditFill" style="width: 19%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Separate Charts -->
+        <div class="charts-grid">
+            <div class="chart-section">
+                <h2 class="section-title">CAPE Ratio (1881–2025)</h2>
+                <div class="chart-container">
+                    <canvas id="capeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h2 class="section-title">Buffett Indicator (1947–2025)*</h2>
+                <div class="chart-container">
+                    <canvas id="buffettChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Closest Parallels -->
+        <div class="parallels-section">
+            <h2 class="section-title">Closest Historical Parallels</h2>
+            <p id="parallelsDescription" style="color: var(--text-secondary); font-size: 0.9rem;">
+                Four eras when CAPE reached the 90th percentile or higher. Peak valuations and subsequent S&P 500 performance:
             </p>
+
+            <table class="parallels-table">
+                <thead>
+                    <tr>
+                        <th>Era</th>
+                        <th>Peak CAPE</th>
+                        <th>Peak Buffett</th>
+                        <th>1Y Return</th>
+                        <th>Max Drawdown</th>
+                        <th>Fell 20%+</th>
+                    </tr>
+                </thead>
+                <tbody id="parallelsTableBody">
+                    <!-- Populated by JavaScript based on composite score -->
+                </tbody>
+            </table>
+
+            <div class="summary-row" id="parallelsSummary">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            
+        </div>
+
+        <!-- Methodology Section -->
+        <div class="methodology-section">
+            <h2>Methodology</h2>
+            <div class="methodology-content">
+                <p>
+                    <strong>CAPE Ratio</strong> (Cyclically Adjusted Price-to-Earnings), developed by economist Robert Shiller, 
+                    divides the S&P 500 index price by the average of ten years of earnings, adjusted for inflation. 
+                    By smoothing out short-term fluctuations, it provides a long-term view of U.S. stock market valuation. 
+                    Data extends back to 1881.
+                </p>
+
+                <p>
+                    <strong>Buffett Indicator</strong> divides the total value of all publicly traded U.S. stocks by 
+                    U.S. gross domestic product (GDP). Named after Warren Buffett, who called it "probably the best single 
+                    measure of where valuations stand at any given moment." It measures overall U.S. market valuation 
+                    relative to the size of the economy.
+                </p>
+
+                <p>
+                    <strong>Composite Score</strong> is the average of two percentile rankings: the CAPE ratio's percentile 
+                    (vs. all monthly observations since 1881) and the Buffett Indicator's percentile (vs. all quarterly 
+                    observations since 1947). Example score: (98 + 100) / 2 = <strong>99</strong>.
+                </p>
+                
+                <p>
+                    <strong>Credit Spread</strong> is shown separately as a sentiment indicator. It measures how much extra 
+                    yield investors demand for corporate bonds over Treasuries. Low spreads indicate complacency—investors 
+                    aren't worried about defaults. Historically, spreads this low (19th percentile) have preceded major 
+                    market peaks, though they don't predict timing.
+                </p>
+
+                <p>
+                    <strong>Historical Parallels</strong> shows past eras with similar composite scores. <em>Max Drawdown</em> is 
+                    the largest peak-to-trough S&P 500 decline within 3 years of the peak. <em>Fell 20%+</em> indicates whether 
+                    the market entered a bear market (20%+ decline) within that same 3-year window.
+                </p>
+
+                <div class="caveat">
+                    <strong>*Buffett Indicator note:</strong> We use Federal Reserve Z.1 data for total market capitalization, 
+                    which is broader than the Wilshire 5000 used by most sources. This produces a higher reading (~260% vs ~220% 
+                    reported elsewhere) but allows longer-term data, going back to 1947.
+                </div>
+
+                <div class="caveat">
+                    <strong>Historical comparisons note:</strong> For eras before 1947 (1901, 1929), only CAPE data is available. 
+                    Buffett Indicator readings for these periods are marked N/A.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sources -->
+        <div class="sources">
+            <div class="sources-title">Data Sources</div>
+            <div class="source-item">
+                <strong>S&P 500:</strong> S&P Dow Jones Indices — 
+                <a href="https://fred.stlouisfed.org/series/SP500" target="_blank">FRED</a>
+            </div>
+            <div class="source-item">
+                <strong>CAPE Ratio:</strong> Robert Shiller, Yale University — 
+                <a href="http://www.econ.yale.edu/~shiller/data.htm" target="_blank">econ.yale.edu/~shiller/data.htm</a>
+            </div>
+            <div class="source-item">
+                <strong>Market Capitalization:</strong> Federal Reserve Z.1 Financial Accounts (BOGZ1LM883164115Q) — 
+                <a href="https://fred.stlouisfed.org/series/BOGZ1LM883164115Q" target="_blank">FRED</a>
+            </div>
+            <div class="source-item">
+                <strong>GDP:</strong> Bureau of Economic Analysis — 
+                <a href="https://fred.stlouisfed.org/series/GDP" target="_blank">FRED</a>
+            </div>
+            <div class="source-item">
+                <strong>Credit Spread:</strong> Moody's BAA minus 10-Year Treasury (BAA10Y) — 
+                <a href="https://fred.stlouisfed.org/series/BAA10Y" target="_blank">FRED</a>
+            </div>
         </div>
     </div>
 
-    <!-- S&P 500 Current Value -->
-    <div class="sp500-ticker">
-        <span class="ticker-label">S&P 500</span>
-        <span class="ticker-value" id="sp500Value">—</span>
-        <span class="ticker-change" id="sp500Change"></span>
-        <span class="ticker-timestamp" id="sp500Timestamp"></span>
+        <!-- Footer -->
+        <footer class="footer">
+            For updates on this site, and to encourage the development of useful, ethical AI tools,<br>
+            please consider subscribing to my blog at <a href="https://alexpanetta.substack.com" target="_blank">alexpanetta.substack.com</a>
+            <div style="margin-top: 1rem; font-size: 0.85rem;">
+                <a href="/llm.txt" style="color: #8b949e; margin-right: 1.5rem;">LLM Context</a>
+                <a href="/about.html" style="color: #8b949e;">About</a>
+            </div>
+        </footer>
     </div>
 
-    <!-- Indicator Cards -->
-    <div class="indicators-grid">
-        <div class="indicator-card">
-            <div class="indicator-header">
-                <span class="indicator-name">CAPE Ratio (Shiller P/E)</span>
-                <div class="indicator-dot dot-red"></div>
-            </div>
-            <div class="indicator-value" id="capeValue">39.9</div>
-            <div class="indicator-meta"><span id="capePercentile">98</span>th percentile since 1881</div>
-            <div class="percentile-bar">
-                <div class="percentile-fill" id="capeFill" style="width: 97%; background: var(--accent-red);"></div>
-            </div>
-        </div>
+    <script>
+        // API endpoint - update this to your deployed backend URL
+        const API_BASE = 'https://s-p-500-cycle-tracker-production.up.railway.app';
+        
+        // Fallback static data (updated Jan 2026 from Shiller data)
+        const STATIC_DATA = {
+            score: 99,
+            sp500: { value: 5970.84, timestamp: 'Jan 8 close' },
+            cape: { value: 39.9, percentile: 98 },
+            buffett: { value: 260, percentile: 100 },
+            creditSpread: { value: 1.73, percentile: 22 }
+        };
 
-        <div class="indicator-card">
-            <div class="indicator-header">
-                <span class="indicator-name">Buffett Indicator*</span>
-                <div class="indicator-dot dot-red"></div>
-            </div>
-            <div class="indicator-value" id="buffettValue">239%</div>
-            <div class="indicator-meta" id="buffettPercentile">All-time high (data since 1947)</div>
-            <div class="percentile-bar">
-                <div class="percentile-fill" id="buffettFill" style="width: 100%; background: var(--accent-red);"></div>
-            </div>
-        </div>
+        // Update the page with live data
+        async function fetchAndUpdateData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/indicators`);
+                if (!response.ok) throw new Error('API request failed');
+                
+                const data = await response.json();
+                
+                // Update composite score
+                document.getElementById('compositeScore').textContent = data.score;
+                
+                // Update score description to match
+                const scoreDesc = document.getElementById('scoreDescription');
+                const scoreAssess = document.getElementById('scoreAssessment');
+                if (data.score >= 90) {
+                    scoreAssess.textContent = 'Historically Extreme Valuations';
+                    scoreDesc.textContent = `A composite score of ${data.score} matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.`;
+                } else if (data.score >= 75) {
+                    scoreAssess.textContent = 'Elevated Stock Values';
+                    scoreDesc.textContent = `A composite score of ${data.score} is in the high range, similar to levels seen before the 2007 financial crisis (87). Historically, such readings preceded significant corrections in most cases.`;
+                } else if (data.score >= 50) {
+                    scoreAssess.textContent = 'Moderately High Stock Values';
+                    scoreDesc.textContent = `A composite score of ${data.score} is above average but not at extreme levels. Historical parallels show mixed outcomes from similar readings.`;
+                } else {
+                    scoreAssess.textContent = 'Below Average Stock Values';
+                    scoreDesc.textContent = `A composite score of ${data.score} suggests valuations are historically reasonable. Such readings have typically preceded positive returns.`;
+                }
+                
+                // Update S&P 500 ticker
+                if (data.sp500) {
+                    document.getElementById('sp500Value').textContent = data.sp500.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const changeEl = document.getElementById('sp500Change');
+                    if (data.sp500.change !== undefined) {
+                        const changeSign = data.sp500.change >= 0 ? '+' : '';
+                        changeEl.textContent = `${changeSign}${data.sp500.change.toFixed(2)} (${changeSign}${data.sp500.changePercent.toFixed(2)}%)`;
+                        changeEl.className = 'ticker-change ' + (data.sp500.change >= 0 ? 'up' : 'down');
+                    }
+                    if (data.sp500.timestamp) {
+                        document.getElementById('sp500Timestamp').textContent = data.sp500.timestamp;
+                    }
+                }
+                
+                // Update CAPE
+                document.getElementById('capeValue').textContent = data.cape.value.toFixed(1);
+                document.getElementById('capePercentile').textContent = data.cape.percentile;
+                document.getElementById('capeFill').style.width = data.cape.percentile + '%';
+                
+                // Update Buffett
+                document.getElementById('buffettValue').textContent = data.buffett.value + '%';
+                document.getElementById('buffettPercentile').textContent = data.buffett.isAllTimeHigh ? 
+                    'All-time high' : data.buffett.percentile + 'th percentile';
+                document.getElementById('buffettFill').style.width = Math.min(data.buffett.percentile, 100) + '%';
+                
+                // Update Credit Spread
+                document.getElementById('creditValue').textContent = data.creditSpread.value.toFixed(2) + '%';
+                document.getElementById('creditPercentile').textContent = data.creditSpread.percentile;
+                document.getElementById('creditFill').style.width = data.creditSpread.percentile + '%';
+                
+                // Update timestamp (use US Eastern time to match market data)
+                const updateTime = new Date(data.updatedAt).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric',
+                    timeZone: 'America/New_York'
+                });
+                document.getElementById('lastUpdated').textContent = `Data as of ${updateTime}`;
+                document.getElementById('lastUpdated').style.display = 'block';
+                
+                // Update parallels based on score
+                updateParallels(data.score);
+                
+                console.log('Data updated:', data);
+            } catch (error) {
+                console.log('Using static data:', error.message);
+                // Use static data for S&P 500 and parallels
+                document.getElementById('sp500Value').textContent = STATIC_DATA.sp500.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('sp500Timestamp').textContent = STATIC_DATA.sp500.timestamp;
+                updateParallels(STATIC_DATA.score);
+            }
+        }
 
-        <div class="indicator-card">
-            <div class="indicator-header">
-                <span class="indicator-name">Credit Spread (BAA-10Y)</span>
-                <div class="indicator-dot dot-red"></div>
-            </div>
-            <div class="indicator-value" id="creditValue">1.69%</div>
-            <div class="indicator-meta"><span id="creditPercentile">19</span>th percentile — low spreads signal complacency.<br>Similar lows preceded peaks in '87, '00, '07, '21</div>
-            <div class="percentile-bar">
-                <div class="percentile-fill" id="creditFill" style="width: 19%; background: var(--accent-red);"></div>
-            </div>
-        </div>
-    </div>
+        // Historical parallels data organized by score ranges
+        // SOURCES & METHODOLOGY (verified January 2026):
+        // - CAPE data: Robert Shiller, Yale (shillerdata.com) - monthly data since 1871
+        // - Buffett Indicator: Federal Reserve Z.1 / FRED - quarterly since 1947
+        // - S&P 500 returns: Wikipedia "Closing milestones of the S&P 500", FRED
+        // - Max Drawdown: Maximum peak-to-trough decline within 3 years of valuation peak
+        // - 1Y Return: S&P 500 total return 12 months after valuation peak
+        // - "Fell 20%": Whether S&P 500 declined 20%+ within 3 years of peak
+        const historicalParallels = {
+            // Score 90-100: Extreme valuations (bubble territory)
+            // Composite = (CAPE pct + Buffett pct) / 2, or CAPE only pre-1947
+            extreme: {
+                description: "Eras when composite score reached 90+. Peak valuations and subsequent S&P 500 performance:",
+                eras: [
+                    // 1929: CAPE peaked at 32.6 in Sept 1929. S&P at 31.30.
+                    // Sept 1930: 20.78. 1Y return: -33.6%. 
+                    // July 1932 low: 5.01 = -84% (within 3yr window)
+                    { year: "1929", context: "Pre-Great Depression", cape: 32.6, buffett: "N/A*", return1y: -33.6, maxDD: -84.0, fell20: true },
+                    
+                    // 1999-2000: CAPE peaked at 44.2 in Dec 1999. S&P peaked March 24, 2000 at 1,552.87.
+                    // 1Y later (March 2001): 1,185.85. 1Y return: -24% 
+                    // Oct 2002 low: 768.83. Max drawdown: -50%
+                    { year: "1999-2000", context: "Dot-Com Bubble", cape: 44.2, buffett: "159%", return1y: -24.0, maxDD: -50.0, fell20: true },
+                    
+                    // 2018: CAPE peaked at 33.3 in Jan 2018. S&P peaked Sept 20, 2018 at 2,931.
+                    // 1Y later (Sept 2019): 2,982. 1Y return: +3% (market recovered!)
+                    // COVID low March 2020: 2,237 intraday. Max DD: -24%
+                    { year: "2018", context: "Late Bull Market", cape: 33.3, buffett: "149%", return1y: 3.0, maxDD: -24.0, fell20: true },
+                    
+                    // 2021: CAPE peaked at 38.6 late 2021. S&P peaked Jan 3, 2022 at 4,796.
+                    // 1Y later (Jan 2023): 3,960. 1Y return: -17%
+                    // Oct 12, 2022 low: 3,577. Max drawdown: -25%
+                    { year: "2021", context: "Post-COVID Peak", cape: 38.6, buffett: "200%", return1y: -17.0, maxDD: -25.0, fell20: true }
+                ],
+                // Summary: All 4 fell 20%+. 
+                // Median 1Y: sorted [-33.6, -24, -17, +3] → median of middle two = (-24 + -17)/2 = -20.5 ~ -21%
+                // Median DD: sorted [-84, -50, -25, -24] → median = (-50 + -25)/2 = -37.5 ~ -38%
+                summary: { eras: 4, fell20Pct: 100, median1y: -21, medianDD: -38 }
+            },
+            // Score 75-89: High valuations
+            high: {
+                description: "Eras when composite score was 75-89. Peak valuations and subsequent S&P 500 performance:",
+                eras: [
+                    // 1901: CAPE at 25.2, S&P fell 26% by 1903
+                    { year: "1901", context: "Turn of Century", cape: 25.2, buffett: "N/A*", return1y: -1.1, maxDD: -26.4, fell20: true },
+                    
+                    // 1937: CAPE at 22.2, recession hit. S&P fell 47% in 1937-38
+                    { year: "1937", context: "Pre-Recession", cape: 22.2, buffett: "N/A*", return1y: -39.0, maxDD: -46.6, fell20: true },
+                    
+                    // 2007: CAPE peaked at 27.3 in Oct 2007. S&P peaked at 1565 on Oct 9, 2007.
+                    // Fell to 666 on March 6, 2009 = -57% drawdown (verified).
+                    // 1Y return from Oct 2007: -37%. Max drawdown: -57%
+                    { year: "2007", context: "Pre-Financial Crisis", cape: 27.3, buffett: "118%", return1y: -37.0, maxDD: -57.0, fell20: true }
+                ],
+                // Median 1Y: -37%, Median DD: -47% (middle of -26.4, -46.6, -57)
+                summary: { eras: 3, fell20Pct: 100, median1y: -37, medianDD: -47 }
+            },
+            // Score 50-74: Moderate valuations
+            moderate: {
+                description: "Eras when composite score was 50-74. Valuations and subsequent S&P 500 performance:",
+                eras: [
+                    { year: "1906", context: "Pre-Panic", cape: 20.1, buffett: "N/A*", return1y: -3.1, maxDD: -36.7, fell20: true },
+                    { year: "1961", context: "Bull Peak", cape: 22.0, buffett: "62%", return1y: -12.7, maxDD: -22.5, fell20: true },
+                    { year: "1966", context: "Go-Go Peak", cape: 24.1, buffett: "78%", return1y: -9.5, maxDD: -17.3, fell20: false },
+                    { year: "1968", context: "Bull Peak", cape: 22.2, buffett: "87%", return1y: -8.7, maxDD: -28.3, fell20: true },
+                    { year: "1972", context: "Nifty Fifty", cape: 18.6, buffett: "81%", return1y: -19.3, maxDD: -42.9, fell20: true }
+                ],
+                summary: { eras: 5, fell20Pct: 80, median1y: -10, medianDD: -28 }
+            },
+            // Score 25-49: Below average valuations
+            belowAverage: {
+                description: "Eras when composite score was 25-49. Valuations and subsequent S&P 500 performance:",
+                eras: [
+                    { year: "1987", context: "Pre-Black Monday", cape: 18.3, buffett: "60%", return1y: -19.9, maxDD: -26.8, fell20: true }
+                ],
+                summary: { eras: 1, fell20Pct: 100, median1y: -20, medianDD: -27 }
+            },
+            // Score 0-24: Low valuations (historically cheap)
+            low: {
+                description: "Eras when composite score was below 25. These are market bottoms:",
+                eras: [
+                    { year: "1921", context: "Post-WWI Bottom", cape: 5.2, buffett: "N/A*", return1y: 29.0, maxDD: -1.5, fell20: false },
+                    { year: "1932", context: "Depression Bottom", cape: 5.6, buffett: "N/A*", return1y: 117.8, maxDD: 0, fell20: false },
+                    { year: "1949", context: "Post-War Bottom", cape: 9.1, buffett: "N/A*", return1y: 34.1, maxDD: 0, fell20: false },
+                    { year: "1974", context: "Stagflation Bottom", cape: 8.3, buffett: "40%", return1y: 32.2, maxDD: 0, fell20: false },
+                    { year: "1982", context: "Volcker Bottom", cape: 6.6, buffett: "32%", return1y: 48.0, maxDD: 0, fell20: false }
+                ],
+                summary: { eras: 5, fell20Pct: 0, median1y: 34, medianDD: 0 }
+            }
+        };
 
-    <!-- Two Separate Charts -->
-    <div class="charts-grid">
-        <div class="chart-section">
-            <h2 class="section-title">CAPE Ratio (1881–2025)</h2>
-            <div class="chart-container">
-                <canvas id="capeChart"></canvas>
-            </div>
-        </div>
+        function getParallelsForScore(score) {
+            if (score >= 90) return historicalParallels.extreme;
+            if (score >= 75) return historicalParallels.high;
+            if (score >= 50) return historicalParallels.moderate;
+            if (score >= 25) return historicalParallels.belowAverage;
+            return historicalParallels.low;
+        }
 
-        <div class="chart-section">
-            <h2 class="section-title">Buffett Indicator (1947–2025)*</h2>
-            <div class="chart-container">
-                <canvas id="buffettChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Closest Parallels -->
-    <div class="parallels-section">
-        <h2 class="section-title">Closest Historical Parallels</h2>
-        <p id="parallelsDescription" style="color: var(--text-secondary); font-size: 0.9rem;">
-            Four eras when CAPE reached the 90th percentile or higher. Peak valuations and subsequent S&P 500 performance:
-        </p>
-
-        <table class="parallels-table">
-            <thead>
+        function updateParallels(score) {
+            const parallels = getParallelsForScore(score);
+            
+            // Update description
+            document.getElementById('parallelsDescription').textContent = parallels.description;
+            
+            // Build table rows
+            const tbody = document.getElementById('parallelsTableBody');
+            tbody.innerHTML = parallels.eras.map(era => `
                 <tr>
-                    <th>Era</th>
-                    <th>Peak CAPE</th>
-                    <th>Peak Buffett</th>
-                    <th>1Y Return</th>
-                    <th>Max Drawdown</th>
-                    <th>Fell 20%+</th>
+                    <td>
+                        <div class="era-name">${era.year}</div>
+                        <div class="era-context">${era.context}</div>
+                    </td>
+                    <td class="mono">${era.cape}</td>
+                    <td class="mono ${era.buffett === 'N/A*' ? 'muted' : ''}">${era.buffett}</td>
+                    <td class="mono ${era.return1y < 0 ? 'negative' : 'positive'}">${era.return1y > 0 ? '+' : ''}${era.return1y}%</td>
+                    <td class="mono negative">${era.maxDD}%</td>
+                    <td class="${era.fell20 ? 'fell-yes' : 'fell-no'}">${era.fell20 ? 'YES' : 'No'}</td>
                 </tr>
-            </thead>
-            <tbody id="parallelsTableBody">
-                <!-- Populated by JavaScript based on composite score -->
-            </tbody>
-        </table>
-
-        <div class="summary-row" id="parallelsSummary">
-            <!-- Populated by JavaScript -->
-        </div>
-
-        
-    </div>
-
-    <!-- Methodology Section -->
-    <div class="methodology-section">
-        <h2>Methodology</h2>
-        <div class="methodology-content">
-            <p>
-                <strong>CAPE Ratio</strong> (Cyclically Adjusted Price-to-Earnings), developed by economist Robert Shiller, 
-                divides the S&P 500 index price by the average of ten years of earnings, adjusted for inflation. 
-                By smoothing out short-term fluctuations, it provides a long-term view of U.S. stock market valuation. 
-                Data extends back to 1881.
-            </p>
-
-            <p>
-                <strong>Buffett Indicator</strong> divides the total value of all publicly traded U.S. stocks by 
-                U.S. gross domestic product (GDP). Named after Warren Buffett, who called it "probably the best single 
-                measure of where valuations stand at any given moment." It measures overall U.S. market valuation 
-                relative to the size of the economy.
-            </p>
-
-            <p>
-                <strong>Composite Score</strong> is the average of two percentile rankings: the CAPE ratio's percentile 
-                (vs. all monthly observations since 1881) and the Buffett Indicator's percentile (vs. all quarterly 
-                observations since 1947). Example score: (98 + 100) / 2 = <strong>99</strong>.
-            </p>
+            `).join('');
             
-            <p>
-                <strong>Credit Spread</strong> is shown separately as a sentiment indicator. It measures how much extra 
-                yield investors demand for corporate bonds over Treasuries. Low spreads indicate complacency—investors 
-                aren't worried about defaults. Historically, spreads this low (19th percentile) have preceded major 
-                market peaks, though they don't predict timing.
-            </p>
-
-            <p>
-                <strong>Historical Parallels</strong> shows past eras with similar composite scores. <em>Max Drawdown</em> is 
-                the largest peak-to-trough S&P 500 decline within 3 years of the peak. <em>Fell 20%+</em> indicates whether 
-                the market entered a bear market (20%+ decline) within that same 3-year window.
-            </p>
-
-            <div class="caveat">
-                <strong>*Buffett Indicator note:</strong> We use Federal Reserve Z.1 data for total market capitalization, 
-                which is broader than the Wilshire 5000 used by most sources. This produces a higher reading (~239% vs ~200% 
-                reported elsewhere) but allows longer-term data, going back to 1947.
-            </div>
-
-            <div class="caveat">
-                <strong>Historical comparisons note:</strong> For eras before 1947 (1901, 1929), only CAPE data is available. 
-                Buffett Indicator readings for these periods are marked N/A.
-            </div>
-        </div>
-    </div>
-
-    <!-- Sources -->
-    <div class="sources">
-        <div class="sources-title">Data Sources</div>
-        <div class="source-item">
-            <strong>S&P 500:</strong> S&P Dow Jones Indices — 
-            <a href="https://fred.stlouisfed.org/series/SP500" target="_blank">FRED</a>
-        </div>
-        <div class="source-item">
-            <strong>CAPE Ratio:</strong> Robert Shiller, Yale University — 
-            <a href="http://www.econ.yale.edu/~shiller/data.htm" target="_blank">econ.yale.edu/~shiller/data.htm</a>
-        </div>
-        <div class="source-item">
-            <strong>Market Capitalization:</strong> Federal Reserve Z.1 Financial Accounts (BOGZ1LM883164115Q) — 
-            <a href="https://fred.stlouisfed.org/series/BOGZ1LM883164115Q" target="_blank">FRED</a>
-        </div>
-        <div class="source-item">
-            <strong>GDP:</strong> Bureau of Economic Analysis — 
-            <a href="https://fred.stlouisfed.org/series/GDP" target="_blank">FRED</a>
-        </div>
-        <div class="source-item">
-            <strong>Credit Spread:</strong> Moody's BAA minus 10-Year Treasury (BAA10Y) — 
-            <a href="https://fred.stlouisfed.org/series/BAA10Y" target="_blank">FRED</a>
-        </div>
-    </div>
-</div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        For updates on this site, and to encourage the development of useful, ethical AI tools,<br>
-        please consider subscribing to my blog at <a href="https://alexpanetta.substack.com" target="_blank">alexpanetta.substack.com</a>
-        <div style="margin-top: 1rem; font-size: 0.85rem;">
-            <a href="/llm.txt" style="color: #8b949e; margin-right: 1.5rem;">LLM Context</a>
-            <a href="/about.html" style="color: #8b949e;">About</a>
-        </div>
-    </footer>
-</div>
-
-<script>
-    // API endpoint - update this to your deployed backend URL
-    const API_BASE = 'https://s-p-500-cycle-tracker-production.up.railway.app';
-    
-    // Fallback static data (updated Jan 2026 from Shiller data)
-    const STATIC_DATA = {
-        score: 99,
-        sp500: { value: 5970.84, timestamp: 'Jan 8 close' },
-        cape: { value: 39.9, percentile: 98 },
-        buffett: { value: 239, percentile: 100 },
-        creditSpread: { value: 1.73, percentile: 22 }
-    };
-
-    // Update the page with live data
-    async function fetchAndUpdateData() {
-        try {
-            const response = await fetch(`${API_BASE}/api/indicators`);
-            if (!response.ok) throw new Error('API request failed');
-            
-            const data = await response.json();
-            
-            // Update composite score
-            document.getElementById('compositeScore').textContent = data.score;
-            
-            // Update score description to match
-            const scoreDesc = document.getElementById('scoreDescription');
-            const scoreAssess = document.getElementById('scoreAssessment');
-            if (data.score >= 90) {
-                scoreAssess.textContent = 'Historically Extreme Valuations';
-                scoreDesc.textContent = `A composite score of ${data.score} matches the highest stock prices on record, seen only during the dot-com bubble and 2021. Previous peaks in 1929, 2007, and 2018 all registered lower. Severe declines followed in most, but not all, similar cases.`;
-            } else if (data.score >= 75) {
-                scoreAssess.textContent = 'Elevated Stock Values';
-                scoreDesc.textContent = `A composite score of ${data.score} is in the high range, similar to levels seen before the 2007 financial crisis (87). Historically, such readings preceded significant corrections in most cases.`;
-            } else if (data.score >= 50) {
-                scoreAssess.textContent = 'Moderately High Stock Values';
-                scoreDesc.textContent = `A composite score of ${data.score} is above average but not at extreme levels. Historical parallels show mixed outcomes from similar readings.`;
-            } else {
-                scoreAssess.textContent = 'Below Average Stock Values';
-                scoreDesc.textContent = `A composite score of ${data.score} suggests valuations are historically reasonable. Such readings have typically preceded positive returns.`;
-            }
-            
-            // Update S&P 500 ticker
-            if (data.sp500) {
-                document.getElementById('sp500Value').textContent = data.sp500.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const changeEl = document.getElementById('sp500Change');
-                if (data.sp500.change !== undefined) {
-                    const changeSign = data.sp500.change >= 0 ? '+' : '';
-                    changeEl.textContent = `${changeSign}${data.sp500.change.toFixed(2)} (${changeSign}${data.sp500.changePercent.toFixed(2)}%)`;
-                    changeEl.className = 'ticker-change ' + (data.sp500.change >= 0 ? 'up' : 'down');
-                }
-                if (data.sp500.timestamp) {
-                    document.getElementById('sp500Timestamp').textContent = data.sp500.timestamp;
-                }
-            }
-            
-            // Update CAPE
-            document.getElementById('capeValue').textContent = data.cape.value.toFixed(1);
-            document.getElementById('capePercentile').textContent = data.cape.percentile;
-            document.getElementById('capeFill').style.width = data.cape.percentile + '%';
-            
-            // Update Buffett
-            document.getElementById('buffettValue').textContent = data.buffett.value + '%';
-            document.getElementById('buffettPercentile').textContent = data.buffett.isAllTimeHigh ? 
-                'All-time high' : data.buffett.percentile + 'th percentile';
-            document.getElementById('buffettFill').style.width = Math.min(data.buffett.percentile, 100) + '%';
-            
-            // Update Credit Spread
-            document.getElementById('creditValue').textContent = data.creditSpread.value.toFixed(2) + '%';
-            document.getElementById('creditPercentile').textContent = data.creditSpread.percentile;
-            document.getElementById('creditFill').style.width = data.creditSpread.percentile + '%';
-            
-            // Update timestamp (use US Eastern time to match market data)
-            const updateTime = new Date(data.updatedAt).toLocaleDateString('en-US', {
-                month: 'short', day: 'numeric', year: 'numeric',
-                timeZone: 'America/New_York'
-            });
-            document.getElementById('lastUpdated').textContent = `Data as of ${updateTime}`;
-            document.getElementById('lastUpdated').style.display = 'block';
-            
-            // Update parallels based on score
-            updateParallels(data.score);
-            
-            console.log('Data updated:', data);
-        } catch (error) {
-            console.log('Using static data:', error.message);
-            // Use static data for S&P 500 and parallels
-            document.getElementById('sp500Value').textContent = STATIC_DATA.sp500.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('sp500Timestamp').textContent = STATIC_DATA.sp500.timestamp;
-            updateParallels(STATIC_DATA.score);
+            // Update summary
+            const summary = parallels.summary;
+            const summaryDiv = document.getElementById('parallelsSummary');
+            summaryDiv.innerHTML = `
+                <div class="summary-stat">
+                    <div class="summary-value">${summary.eras}</div>
+                    <div class="summary-label">Eras Analyzed</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-value ${summary.fell20Pct > 50 ? 'negative' : summary.fell20Pct > 0 ? 'warning' : 'positive'}">${summary.fell20Pct}%</div>
+                    <div class="summary-label">Fell 20%+ (3yr)</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-value ${summary.median1y < 0 ? 'negative' : 'positive'}">${summary.median1y > 0 ? '+' : ''}${summary.median1y}%</div>
+                    <div class="summary-label">Median 1Y Return</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-value negative">${summary.medianDD}%</div>
+                    <div class="summary-label">Median Max DD</div>
+                </div>
+            `;
         }
-    }
 
-    // Historical parallels data organized by score ranges
-    // SOURCES & METHODOLOGY (verified January 2026):
-    // - CAPE data: Robert Shiller, Yale (shillerdata.com) - monthly data since 1871
-    // - Buffett Indicator: Federal Reserve Z.1 / FRED - quarterly since 1947
-    // - S&P 500 returns: Wikipedia "Closing milestones of the S&P 500", FRED
-    // - Max Drawdown: Maximum peak-to-trough decline within 3 years of valuation peak
-    // - 1Y Return: S&P 500 total return 12 months after valuation peak
-    // - "Fell 20%": Whether S&P 500 declined 20%+ within 3 years of peak
-    const historicalParallels = {
-        // Score 90-100: Extreme valuations (bubble territory)
-        // Composite = (CAPE pct + Buffett pct) / 2, or CAPE only pre-1947
-        extreme: {
-            description: "Eras when composite score reached 90+. Peak valuations and subsequent S&P 500 performance:",
-            eras: [
-                // 1929: CAPE peaked at 32.6 in Sept 1929. S&P at 31.30.
-                // Sept 1930: 20.78. 1Y return: -33.6%. 
-                // July 1932 low: 5.01 = -84% (within 3yr window)
-                { year: "1929", context: "Pre-Great Depression", cape: 32.6, buffett: "N/A*", return1y: -33.6, maxDD: -84.0, fell20: true },
-                
-                // 1999-2000: CAPE peaked at 44.2 in Dec 1999. S&P peaked March 24, 2000 at 1,552.87.
-                // 1Y later (March 2001): 1,185.85. 1Y return: -24% 
-                // Oct 2002 low: 768.83. Max drawdown: -50%
-                { year: "1999-2000", context: "Dot-Com Bubble", cape: 44.2, buffett: "159%", return1y: -24.0, maxDD: -50.0, fell20: true },
-                
-                // 2018: CAPE peaked at 33.3 in Jan 2018. S&P peaked Sept 20, 2018 at 2,931.
-                // 1Y later (Sept 2019): 2,982. 1Y return: +3% (market recovered!)
-                // COVID low March 2020: 2,237 intraday. Max DD: -24%
-                { year: "2018", context: "Late Bull Market", cape: 33.3, buffett: "149%", return1y: 3.0, maxDD: -24.0, fell20: true },
-                
-                // 2021: CAPE peaked at 38.6 late 2021. S&P peaked Jan 3, 2022 at 4,796.
-                // 1Y later (Jan 2023): 3,960. 1Y return: -17%
-                // Oct 12, 2022 low: 3,577. Max drawdown: -25%
-                { year: "2021", context: "Post-COVID Peak", cape: 38.6, buffett: "200%", return1y: -17.0, maxDD: -25.0, fell20: true }
-            ],
-            // Summary: All 4 fell 20%+. 
-            // Median 1Y: sorted [-33.6, -24, -17, +3] → median of middle two = (-24 + -17)/2 = -20.5 ~ -21%
-            // Median DD: sorted [-84, -50, -25, -24] → median = (-50 + -25)/2 = -37.5 ~ -38%
-            summary: { eras: 4, fell20Pct: 100, median1y: -21, medianDD: -38 }
-        },
-        // Score 75-89: High valuations
-        high: {
-            description: "Eras when composite score was 75-89. Peak valuations and subsequent S&P 500 performance:",
-            eras: [
-                // 1901: CAPE at 25.2, S&P fell 26% by 1903
-                { year: "1901", context: "Turn of Century", cape: 25.2, buffett: "N/A*", return1y: -1.1, maxDD: -26.4, fell20: true },
-                
-                // 1937: CAPE at 22.2, recession hit. S&P fell 47% in 1937-38
-                { year: "1937", context: "Pre-Recession", cape: 22.2, buffett: "N/A*", return1y: -39.0, maxDD: -46.6, fell20: true },
-                
-                // 2007: CAPE peaked at 27.3 in Oct 2007. S&P peaked at 1565 on Oct 9, 2007.
-                // Fell to 666 on March 6, 2009 = -57% drawdown (verified).
-                // 1Y return from Oct 2007: -37%. Max drawdown: -57%
-                { year: "2007", context: "Pre-Financial Crisis", cape: 27.3, buffett: "118%", return1y: -37.0, maxDD: -57.0, fell20: true }
-            ],
-            // Median 1Y: -37%, Median DD: -47% (middle of -26.4, -46.6, -57)
-            summary: { eras: 3, fell20Pct: 100, median1y: -37, medianDD: -47 }
-        },
-        // Score 50-74: Moderate valuations
-        moderate: {
-            description: "Eras when composite score was 50-74. Valuations and subsequent S&P 500 performance:",
-            eras: [
-                { year: "1906", context: "Pre-Panic", cape: 20.1, buffett: "N/A*", return1y: -3.1, maxDD: -36.7, fell20: true },
-                { year: "1961", context: "Bull Peak", cape: 22.0, buffett: "62%", return1y: -12.7, maxDD: -22.5, fell20: true },
-                { year: "1966", context: "Go-Go Peak", cape: 24.1, buffett: "78%", return1y: -9.5, maxDD: -17.3, fell20: false },
-                { year: "1968", context: "Bull Peak", cape: 22.2, buffett: "87%", return1y: -8.7, maxDD: -28.3, fell20: true },
-                { year: "1972", context: "Nifty Fifty", cape: 18.6, buffett: "81%", return1y: -19.3, maxDD: -42.9, fell20: true }
-            ],
-            summary: { eras: 5, fell20Pct: 80, median1y: -10, medianDD: -28 }
-        },
-        // Score 25-49: Below average valuations
-        belowAverage: {
-            description: "Eras when composite score was 25-49. Valuations and subsequent S&P 500 performance:",
-            eras: [
-                { year: "1987", context: "Pre-Black Monday", cape: 18.3, buffett: "60%", return1y: -19.9, maxDD: -26.8, fell20: true }
-            ],
-            summary: { eras: 1, fell20Pct: 100, median1y: -20, medianDD: -27 }
-        },
-        // Score 0-24: Low valuations (historically cheap)
-        low: {
-            description: "Eras when composite score was below 25. These are market bottoms:",
-            eras: [
-                { year: "1921", context: "Post-WWI Bottom", cape: 5.2, buffett: "N/A*", return1y: 29.0, maxDD: -1.5, fell20: false },
-                { year: "1932", context: "Depression Bottom", cape: 5.6, buffett: "N/A*", return1y: 117.8, maxDD: 0, fell20: false },
-                { year: "1949", context: "Post-War Bottom", cape: 9.1, buffett: "N/A*", return1y: 34.1, maxDD: 0, fell20: false },
-                { year: "1974", context: "Stagflation Bottom", cape: 8.3, buffett: "40%", return1y: 32.2, maxDD: 0, fell20: false },
-                { year: "1982", context: "Volcker Bottom", cape: 6.6, buffett: "32%", return1y: 48.0, maxDD: 0, fell20: false }
-            ],
-            summary: { eras: 5, fell20Pct: 0, median1y: 34, medianDD: 0 }
-        }
-    };
+        // Fetch data on page load
+        fetchAndUpdateData();
 
-    function getParallelsForScore(score) {
-        if (score >= 90) return historicalParallels.extreme;
-        if (score >= 75) return historicalParallels.high;
-        if (score >= 50) return historicalParallels.moderate;
-        if (score >= 25) return historicalParallels.belowAverage;
-        return historicalParallels.low;
-    }
+        // CAPE data - more data points for smoother curve (from Shiller dataset)
+        const capeData = [
+            { year: 1881, value: 18.5 },
+            { year: 1890, value: 22.0 },
+            { year: 1901, value: 25.2 },
+            { year: 1910, value: 15.0 },
+            { year: 1921, value: 5.2 },
+            { year: 1929, value: 32.6 },
+            { year: 1932, value: 5.6 },
+            { year: 1937, value: 22.2 },
+            { year: 1942, value: 8.5 },
+            { year: 1950, value: 12.0 },
+            { year: 1960, value: 18.0 },
+            { year: 1966, value: 24.1 },
+            { year: 1975, value: 10.0 },
+            { year: 1982, value: 6.6 },
+            { year: 1987, value: 18.3 },
+            { year: 1995, value: 24.0 },
+            { year: 2000, value: 44.2 },
+            { year: 2003, value: 22.0 },
+            { year: 2007, value: 27.3 },
+            { year: 2009, value: 13.3 },
+            { year: 2015, value: 27.0 },
+            { year: 2018, value: 33.3 },
+            { year: 2020, value: 31.0 },
+            { year: 2021, value: 38.6 },
+            { year: 2023, value: 30.0 },
+            { year: 2025, value: 39.9 }
+        ];
 
-    function updateParallels(score) {
-        const parallels = getParallelsForScore(score);
-        
-        // Update description
-        document.getElementById('parallelsDescription').textContent = parallels.description;
-        
-        // Build table rows
-        const tbody = document.getElementById('parallelsTableBody');
-        tbody.innerHTML = parallels.eras.map(era => `
-            <tr>
-                <td>
-                    <div class="era-name">${era.year}</div>
-                    <div class="era-context">${era.context}</div>
-                </td>
-                <td class="mono">${era.cape}</td>
-                <td class="mono ${era.buffett === 'N/A*' ? 'muted' : ''}">${era.buffett}</td>
-                <td class="mono ${era.return1y < 0 ? 'negative' : 'positive'}">${era.return1y > 0 ? '+' : ''}${era.return1y}%</td>
-                <td class="mono negative">${era.maxDD}%</td>
-                <td class="${era.fell20 ? 'fell-yes' : 'fell-no'}">${era.fell20 ? 'YES' : 'No'}</td>
-            </tr>
-        `).join('');
-        
-        // Update summary
-        const summary = parallels.summary;
-        const summaryDiv = document.getElementById('parallelsSummary');
-        summaryDiv.innerHTML = `
-            <div class="summary-stat">
-                <div class="summary-value">${summary.eras}</div>
-                <div class="summary-label">Eras Analyzed</div>
-            </div>
-            <div class="summary-stat">
-                <div class="summary-value ${summary.fell20Pct > 50 ? 'negative' : summary.fell20Pct > 0 ? 'warning' : 'positive'}">${summary.fell20Pct}%</div>
-                <div class="summary-label">Fell 20%+ (3yr)</div>
-            </div>
-            <div class="summary-stat">
-                <div class="summary-value ${summary.median1y < 0 ? 'negative' : 'positive'}">${summary.median1y > 0 ? '+' : ''}${summary.median1y}%</div>
-                <div class="summary-label">Median 1Y Return</div>
-            </div>
-            <div class="summary-stat">
-                <div class="summary-value negative">${summary.medianDD}%</div>
-                <div class="summary-label">Median Max DD</div>
-            </div>
-        `;
-    }
+        // Buffett data (1947-2025) - actual data points
+        const buffettData = [
+            { year: 1947, value: 35 },
+            { year: 1952, value: 36 },
+            { year: 1957, value: 52 },
+            { year: 1962, value: 60 },
+            { year: 1966, value: 78 },
+            { year: 1970, value: 72 },
+            { year: 1974, value: 45 },
+            { year: 1978, value: 42 },
+            { year: 1982, value: 36 },
+            { year: 1987, value: 60 },
+            { year: 1990, value: 55 },
+            { year: 1995, value: 85 },
+            { year: 2000, value: 172 },
+            { year: 2003, value: 75 },
+            { year: 2007, value: 131 },
+            { year: 2009, value: 57 },
+            { year: 2015, value: 115 },
+            { year: 2018, value: 161 },
+            { year: 2020, value: 175 },
+            { year: 2021, value: 239 },
+            { year: 2022, value: 157 },
+            { year: 2024, value: 232 },
+            { year: 2025, value: 260 }
+        ];
 
-    // Fetch data on page load
-    fetchAndUpdateData();
-
-    // CAPE data - more data points for smoother curve (from Shiller dataset)
-    const capeData = [
-        { year: 1881, value: 18.5 },
-        { year: 1890, value: 22.0 },
-        { year: 1901, value: 25.2 },
-        { year: 1910, value: 15.0 },
-        { year: 1921, value: 5.2 },
-        { year: 1929, value: 32.6 },
-        { year: 1932, value: 5.6 },
-        { year: 1937, value: 22.2 },
-        { year: 1942, value: 8.5 },
-        { year: 1950, value: 12.0 },
-        { year: 1960, value: 18.0 },
-        { year: 1966, value: 24.1 },
-        { year: 1975, value: 10.0 },
-        { year: 1982, value: 6.6 },
-        { year: 1987, value: 18.3 },
-        { year: 1995, value: 24.0 },
-        { year: 2000, value: 44.2 },
-        { year: 2003, value: 22.0 },
-        { year: 2007, value: 27.3 },
-        { year: 2009, value: 13.3 },
-        { year: 2015, value: 27.0 },
-        { year: 2018, value: 33.3 },
-        { year: 2020, value: 31.0 },
-        { year: 2021, value: 38.6 },
-        { year: 2023, value: 30.0 },
-        { year: 2025, value: 39.9 }
-    ];
-
-    // Buffett data (1947-2025) - actual data points
-    const buffettData = [
-        { year: 1947, value: 35 },
-        { year: 1952, value: 36 },
-        { year: 1957, value: 52 },
-        { year: 1962, value: 60 },
-        { year: 1966, value: 78 },
-        { year: 1970, value: 72 },
-        { year: 1974, value: 45 },
-        { year: 1978, value: 42 },
-        { year: 1982, value: 36 },
-        { year: 1987, value: 60 },
-        { year: 1990, value: 55 },
-        { year: 1995, value: 85 },
-        { year: 2000, value: 172 },
-        { year: 2003, value: 75 },
-        { year: 2007, value: 131 },
-        { year: 2009, value: 57 },
-        { year: 2015, value: 115 },
-        { year: 2018, value: 161 },
-        { year: 2020, value: 175 },
-        { year: 2021, value: 239 },
-        { year: 2022, value: 157 },
-        { year: 2024, value: 232 },
-        { year: 2025, value: 239 }
-    ];
-
-    // CAPE Chart - using linear scale for proper year spacing
-    const capeCtx = document.getElementById('capeChart').getContext('2d');
-    new Chart(capeCtx, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'CAPE',
-                data: capeData.map(d => ({ x: d.year, y: d.value })),
-                borderColor: '#58a6ff',
-                backgroundColor: 'rgba(88, 166, 255, 0.1)',
-                borderWidth: 2,
-                pointRadius: 0,
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#21262d',
-                    titleColor: '#e6edf3',
-                    bodyColor: '#e6edf3',
-                    callbacks: {
-                        title: (ctx) => ctx[0].parsed.x.toString(),
-                        label: (ctx) => `CAPE: ${ctx.parsed.y.toFixed(1)}`
-                    }
-                }
+        // CAPE Chart - using linear scale for proper year spacing
+        const capeCtx = document.getElementById('capeChart').getContext('2d');
+        new Chart(capeCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'CAPE',
+                    data: capeData.map(d => ({ x: d.year, y: d.value })),
+                    borderColor: '#58a6ff',
+                    backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true
+                }]
             },
-            scales: {
-                x: {
-                    type: 'linear',
-                    min: 1881,
-                    max: 2025,
-                    grid: { color: '#21262d' },
-                    ticks: { 
-                        color: '#8b949e',
-                        stepSize: 40,
-                        callback: (value) => value
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#21262d',
+                        titleColor: '#e6edf3',
+                        bodyColor: '#e6edf3',
+                        callbacks: {
+                            title: (ctx) => ctx[0].parsed.x.toString(),
+                            label: (ctx) => `CAPE: ${ctx.parsed.y.toFixed(1)}`
+                        }
                     }
                 },
-                y: {
-                    grid: { color: '#21262d' },
-                    ticks: { color: '#8b949e' },
-                    min: 0,
-                    max: 55
-                }
-            }
-        }
-    });
-
-    // Buffett Chart - using linear scale for proper year spacing
-    const buffettCtx = document.getElementById('buffettChart').getContext('2d');
-    new Chart(buffettCtx, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'Buffett %',
-                data: buffettData.map(d => ({ x: d.year, y: d.value })),
-                borderColor: '#f85149',
-                backgroundColor: 'rgba(248, 81, 73, 0.1)',
-                borderWidth: 2,
-                pointRadius: 0,
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#21262d',
-                    titleColor: '#e6edf3',
-                    bodyColor: '#e6edf3',
-                    callbacks: {
-                        title: (ctx) => ctx[0].parsed.x.toString(),
-                        label: (ctx) => `Buffett: ${ctx.parsed.y}%`
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    type: 'linear',
-                    min: 1947,
-                    max: 2025,
-                    grid: { color: '#21262d' },
-                    ticks: { 
-                        color: '#8b949e',
-                        stepSize: 20,
-                        callback: (value) => value
-                    }
-                },
-                y: {
-                    grid: { color: '#21262d' },
-                    ticks: { 
-                        color: '#8b949e',
-                        callback: (v) => v + '%'
+                scales: {
+                    x: {
+                        type: 'linear',
+                        min: 1881,
+                        max: 2025,
+                        grid: { color: '#21262d' },
+                        ticks: { 
+                            color: '#8b949e',
+                            stepSize: 40,
+                            callback: (value) => value
+                        }
                     },
-                    min: 0,
-                    max: 280
+                    y: {
+                        grid: { color: '#21262d' },
+                        ticks: { color: '#8b949e' },
+                        min: 0,
+                        max: 55
+                    }
                 }
             }
-        }
-    });
-</script>
+        });
 
+        // Buffett Chart - using linear scale for proper year spacing
+        const buffettCtx = document.getElementById('buffettChart').getContext('2d');
+        new Chart(buffettCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Buffett %',
+                    data: buffettData.map(d => ({ x: d.year, y: d.value })),
+                    borderColor: '#f85149',
+                    backgroundColor: 'rgba(248, 81, 73, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#21262d',
+                        titleColor: '#e6edf3',
+                        bodyColor: '#e6edf3',
+                        callbacks: {
+                            title: (ctx) => ctx[0].parsed.x.toString(),
+                            label: (ctx) => `Buffett: ${ctx.parsed.y}%`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        min: 1947,
+                        max: 2025,
+                        grid: { color: '#21262d' },
+                        ticks: { 
+                            color: '#8b949e',
+                            stepSize: 20,
+                            callback: (value) => value
+                        }
+                    },
+                    y: {
+                        grid: { color: '#21262d' },
+                        ticks: { 
+                            color: '#8b949e',
+                            callback: (v) => v + '%'
+                        },
+                        min: 0,
+                        max: 280
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
