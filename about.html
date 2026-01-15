@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Stock Market Cycle Tracker</title>
+    <meta name="description" content="About the Stock Market Cycle Tracker dashboard and its creator, Alex Panetta. Learn about the methodology, data sources, and how this AI-built tool was created.">
+    <meta name="author" content="Alex Panetta">
+    <meta name="keywords" content="stock market, CAPE ratio, Shiller PE, Buffett Indicator, market valuation, AI dashboard, Alex Panetta">
+
+```
+<!-- Open Graph -->
+<meta property="og:title" content="About - Stock Market Cycle Tracker">
+<meta property="og:description" content="A real-time market valuation dashboard analyzing 140+ years of data. Built by Alex Panetta using AI tools.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.marketcalculator.net/about.html">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="About - Stock Market Cycle Tracker">
+<meta name="twitter:description" content="A real-time market valuation dashboard analyzing 140+ years of data. Built by Alex Panetta using AI tools.">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Stock Market Cycle Tracker",
+    "url": "https://www.marketcalculator.net",
+    "description": "Real-time stock market valuation dashboard using Shiller CAPE and Buffett Indicator with 140+ years of historical context",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+    },
+    "creator": {
+        "@type": "Person",
+        "name": "Alex Panetta",
+        "url": "https://alexpanetta.substack.com",
+        "jobTitle": "AI Consultant & Journalist",
+        "description": "Former political journalist at CBC, Georgetown University graduate student in AI ethics and management",
+        "sameAs": [
+            "https://alexpanetta.substack.com"
+        ]
+    }
+}
+</script>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Alex Panetta",
+    "url": "https://alexpanetta.substack.com",
+    "jobTitle": "AI Consultant & Journalist",
+    "description": "Former political journalist transitioning to AI consulting. Graduate student at Georgetown University studying AI ethics and management. Creator of practical AI tools and dashboards.",
+    "alumniOf": {
+        "@type": "Organization",
+        "name": "Georgetown University"
+    },
+    "knowsAbout": ["Artificial Intelligence", "AI Ethics", "Data Visualization", "Journalism", "U.S. Politics"],
+    "sameAs": [
+        "https://alexpanetta.substack.com"
+    ]
+}
+</script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: #0d1117;
+        color: #e6edf3;
+        line-height: 1.6;
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    h1 {
+        color: #58a6ff;
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+    }
+    
+    h2 {
+        color: #58a6ff;
+        margin: 2rem 0 1rem 0;
+        font-size: 1.4rem;
+    }
+    
+    p {
+        margin-bottom: 1rem;
+        color: #c9d1d9;
+    }
+    
+    a {
+        color: #58a6ff;
+        text-decoration: none;
+    }
+    
+    a:hover {
+        text-decoration: underline;
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: #8b949e;
+    }
+    
+    .section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #21262d;
+    }
+    
+    .data-source {
+        background: #161b22;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .data-source strong {
+        color: #e6edf3;
+    }
+    
+    ul {
+        margin-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    li {
+        margin-bottom: 0.5rem;
+        color: #c9d1d9;
+    }
+    
+    .creator-box {
+        background: #161b22;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #21262d;
+    }
+    
+    .creator-box h3 {
+        color: #e6edf3;
+        margin-bottom: 0.5rem;
+    }
+    
+    .creator-box p {
+        margin-bottom: 0.5rem;
+    }
+</style>
+```
+
+</head>
+<body>
+    <a href="/" class="back-link">← Back to Dashboard</a>
+
+```
+<h1>About Stock Market Cycle Tracker</h1>
+
+<div class="section">
+    <h2>What This Is</h2>
+    <p>The Stock Market Cycle Tracker is a real-time dashboard that analyzes stock market valuations using 140+ years of historical data. It calculates a composite score (0-100) based on two well-established valuation metrics, comparing current market conditions to historical norms.</p>
+    <p>This tool is <strong>descriptive, not predictive</strong>. It does not offer investment advice. It shows where current valuations stand relative to history and what happened in similar periods.</p>
+</div>
+
+<div class="section">
+    <h2>Methodology</h2>
+    <p>The composite score is the average of two percentile rankings:</p>
+    <ul>
+        <li><strong>Shiller CAPE Ratio</strong> — The cyclically adjusted price-to-earnings ratio, using 10 years of earnings data to smooth business cycle effects. Created by Nobel laureate Robert Shiller.</li>
+        <li><strong>Buffett Indicator</strong> — Total stock market capitalization divided by GDP. Named after Warren Buffett, who called it "probably the best single measure of where valuations stand at any given moment."</li>
+    </ul>
+    <p>Each metric is compared against its full historical range to determine a percentile. The composite score averages these two percentiles.</p>
+    <p><strong>Note:</strong> Our Buffett Indicator uses Federal Reserve Z.1 data for market capitalization, which is broader than the Wilshire 5000 used by most sources. This produces higher readings but enables longer historical comparison (back to 1947).</p>
+</div>
+
+<div class="section">
+    <h2>Data Sources</h2>
+    <div class="data-source">
+        <strong>Shiller CAPE:</strong> Robert Shiller, Yale University — <a href="http://www.econ.yale.edu/~shiller/data.htm" target="_blank">econ.yale.edu/~shiller/data.htm</a>
+    </div>
+    <div class="data-source">
+        <strong>Market Capitalization:</strong> Federal Reserve Z.1 Financial Accounts (BOGZ1LM883164115Q) — <a href="https://fred.stlouisfed.org/series/BOGZ1LM883164115Q" target="_blank">FRED</a>
+    </div>
+    <div class="data-source">
+        <strong>GDP:</strong> U.S. Bureau of Economic Analysis via FRED — <a href="https://fred.stlouisfed.org/series/GDP" target="_blank">FRED</a>
+    </div>
+    <div class="data-source">
+        <strong>Credit Spread:</strong> Moody's BAA Corporate Bond vs 10-Year Treasury — <a href="https://fred.stlouisfed.org/series/BAA10Y" target="_blank">FRED</a>
+    </div>
+    <div class="data-source">
+        <strong>S&P 500:</strong> S&P Dow Jones Indices via FRED — <a href="https://fred.stlouisfed.org/series/SP500" target="_blank">FRED</a>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Creator</h2>
+    <div class="creator-box">
+        <h3>Alex Panetta</h3>
+        <p>Journalist & AI Student</p>
+        <p>I spent almost 30 years as a journalist at the Canadian Broadcasting Corporation (CBC), Politico and The Canadian Press, most recently covering U.S. politics from Washington. I am currently writing about and studying AI while getting a master's in AI Management at Georgetown University. I'm focusing on practical and ethical applications of AI tools for businesses and individuals.</p>
+        <p>I built this dashboard to demonstrate how AI tools now enable anyone to create custom data visualizations — no coding experience required. I write about practical, ethical AI applications on my Substack.</p>
+        <p><a href="https://alexpanetta.substack.com" target="_blank">alexpanetta.substack.com</a></p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>How This Was Built</h2>
+    <p>This dashboard was built using AI-assisted development with four main tools:</p>
+    <ul>
+        <li><strong>Claude (Anthropic)</strong> — AI assistant that wrote the code based on natural language descriptions</li>
+        <li><strong>GitHub</strong> — Code repository and version control</li>
+        <li><strong>Railway</strong> — Backend server hosting the API that fetches live data</li>
+        <li><strong>Vercel</strong> — Frontend hosting for the website</li>
+    </ul>
+    <p>Total cost: approximately $25-40/month. Development time: several sessions over a few days.</p>
+    <p>Read the full story: <a href="https://alexpanetta.substack.com" target="_blank">I did not build this app to predict a stock market crash but...</a></p>
+</div>
+
+<div class="section" style="border-bottom: none;">
+    <h2>Disclaimer</h2>
+    <p>This dashboard is for informational and educational purposes only. It does not constitute investment advice, and no investment decisions should be made based on this tool. Past performance and historical patterns do not guarantee future results. The creator is not a licensed financial advisor.</p>
+</div>
+
+<p style="margin-top: 2rem; color: #8b949e; font-size: 0.9rem;">
+    <a href="/" style="color: #8b949e;">Dashboard</a> · 
+    <a href="/llm.txt" style="color: #8b949e;">For AI</a> · 
+    <a href="https://alexpanetta.substack.com" style="color: #8b949e;" target="_blank">Substack</a>
+</p>
+```
+
+</body>
+</html>
