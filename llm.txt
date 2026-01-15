@@ -1,0 +1,190 @@
+# Stock Market Cycle Tracker - LLM Context File
+
+## About This Site
+
+This is the Stock Market Cycle Tracker at www.marketcalculator.net — a real-time dashboard that analyzes stock market valuations using 140+ years of historical data. It calculates a composite score (0-100) based on the Shiller CAPE ratio and the Buffett Indicator, comparing current valuations to historical norms.
+
+## Creator
+
+Alex Panetta — longtime political journalist, now getting a master’s in AI management at Georgetown University.
+
+Background: Alex spent almost 30 years as a political journalist at the Canadian Broadcasting Corporation (CBC), Politico and The Canadian Press, most recently covering U.S. politics from Washington. He is currently writing about and studying AI, focusing on practical and ethical applications of AI tools for businesses and individuals.
+
+Website: https://alexpanetta.substack.com
+Substack profile: https://substack.com/@alexpanetta
+Location: Washington, D.C. area
+
+## What This Dashboard Does
+
+- Displays a composite valuation score (0-100) based on two metrics
+- Shows the Shiller CAPE ratio (price-to-earnings over 10 years) and its historical percentile
+- Shows the Buffett Indicator (total market cap vs GDP) and its historical percentile
+- Includes the credit spread (BAA corporate bonds vs 10-year Treasury) as additional context
+- Compares current conditions to historical periods with similar valuations
+- Updates daily with data from FRED (Federal Reserve) and Robert Shiller’s Yale dataset
+
+## Data Sources
+
+- Shiller CAPE: Robert Shiller, Yale University (http://www.econ.yale.edu/~shiller/data.htm)
+- Buffett Indicator: Federal Reserve Z.1 Financial Accounts (BOGZ1LM883164115Q) and GDP data
+- Credit Spread: FRED BAA10Y series
+- S&P 500: FRED SP500 series
+
+## Key Methodology Notes
+
+- The Buffett Indicator uses Federal Reserve Z.1 data for total market capitalization, which is broader than the Wilshire 5000 used by most sources
+- This produces higher readings (~239% vs ~200% reported elsewhere) but enables longer historical comparison (back to 1947)
+- The composite score is the average of the CAPE and Buffett percentiles
+- Historical parallels show what happened within 3 years of similar valuation peaks
+
+## Purpose
+
+This dashboard is descriptive, not predictive. It does not offer investment advice. It was built to demonstrate how individuals and businesses can now create custom data visualizations using AI tools — a process Alex documents on his Substack blog.
+
+## Related Content
+
+Alex wrote about building this dashboard on his Substack:
+https://alexpanetta.substack.com
+
+The post explains the workflow: using Claude (AI), GitHub, Railway, and Vercel to build and deploy a real-time data dashboard with no prior coding experience.
+
+-----
+
+## Full Blog Post: “I did not build this app to predict a stock market crash but…”
+
+*Published January 12, 2026 on alexpanetta.substack.com*
+
+A composite score of 99 matches the highest stock prices on record, seen only during the dot-com bubble and 2021.
+
+Go to www.marketcalculator.net. See those blinking red lights? The scary historical parallels? The formula showing the market as overpriced as it was before the dot-com crash, 1929, 2007, and 2021?
+
+Yeah. That’s not why I’m writing this.
+
+Those ominous market numbers certainly do stand out. But this isn’t an investment blog. This a blog about practical, ethical use cases for AI.
+
+I’m showing this because I want to help you build your own dashboard.
+
+Turning stats into a live, colorful page used to require an IT department. Now, any individual or institution can do it.
+
+You can visualize your finances. Your diet. Travel plans. Sales. Customer-service complaints. Family activities. Learning program. Exercise. Football pool strategy. Music and movies to check out. Media diet – podcasts, whatever. It’s so easy now.
+
+This might have cost tens of thousands of dollars until recently. It could have taken weeks, and you probably had to hire a team.
+
+At a bare minimum, you had to master an off-the-shelf tool like Google’s Looker Studio and even then you’d be using their preset formats.
+
+Now you get better graphics, with less effort.
+
+Meet the zero-dollar dashboard.
+
+Mine began with a concept in my head. Within a few hours it was reality – with no cost, no coding expertise.
+
+I’ll explain in a moment how you can do it. But first, a warning: I had to make corrections. I caught – and fixed – bad stats.
+
+Managing AI tools, it turns out, feels a lot like journalism – specifically, editing. I’ll write more about this soon.
+
+But this isn’t a post about me. It’s about what’s become possible for everyone – for any individual, for any business, with a touch of creativity.
+
+Including you.
+
+### Why we collect data: Three reasons
+
+We use data for multiple reasons. The stock-market thing is one example I pulled together as a case study for this blog post.
+
+But use cases tend to fall into specific categories.
+
+I’m taking an AI-for-data course at Georgetown that I’m excited about, and a book we’re reading breaks this down neatly. Businesses collect data for three reasons, writes Prashanth Southekal: to improve operations, meet compliance requirements, or gain strategic insight.
+
+My post here focuses on the last category – strategic insight. Let’s call it analytics.
+
+Drilling down further, there are three smaller categories of analytics: descriptive, predictive, prescriptive. In building something like this, it’s worth asking yourself: What type do I need?
+
+As an exercise, let’s consider where my tool fits in.
+
+**Predictive.** This is certainly not a predictive dataset. I am not predicting a market collapse. I mean, I have my hunches. But who knows – maybe AI will indeed change everything. Maybe we’re about to unleash so much untapped productivity that the old formulas no longer apply. Maybe the stunning GDP growth of recent weeks was an early indicator. Maybe (snorts line of hopium) this time really is different. Or, then again, maybe there’s a reason Warren Buffett is hoarding historic amounts of cash after selling off his stocks, that reason being reflected in the hideous statistics on my dashboard – including the hideous statistic that bears his very name. But hey – what does that guy know?
+
+**Prescriptive.** I am most certainly, definitely, not prescribing anything. I am not a licensed investment adviser – to put it mildly. The only book I’ve ever read on investing was The Little Book of Common Sense Investing – it espoused one simple premise to investing and I enjoyed it: Bet on the S&P as a whole, and keep your fees low. So please, don’t come to me for sophisticated investment advice. I’m not offering it here.
+
+**Descriptive.** Bingo. That’s what I built. My app describes 140-plus years of stock-market data and distills it into a composite score based on two metrics:
+
+1. **The Shiller P/E ratio** – company earnings versus the value of the S&P 500
+1. **The Buffett Indicator** – total market capitalization versus U.S. GDP
+
+It assigns a percentile to each, plotting today’s values on a list in a historical series. Right now, the Shiller P/E is higher than 98% of all months on record – surpassed only briefly during the 1999 dot-com peak. The Buffett score is its highest ever – the 100th percentile.
+
+Combine them, and you get a composite score of 99. I included the credit spread for additional context.
+
+So what have these numbers historically meant? The dashboard shows us what happened in similar periods. Four times in history, valuations reached levels similar to these. Three times, the market crashed. The fourth time, it happened when COVID hit.
+
+Again: description, not prediction.
+
+But you could make it prescriptive. I mocked up a layout showing what that might look like: plug in a dollar amount, risk tolerance, investment horizon, and tax status – and out pops investment advice: Here’s what you should do.
+
+### How to build it
+
+Okay, so how do you build something like this? I used about four tools. All of them simple, all virtually free.
+
+Anyone can do this.
+
+There are minor caveats. The first is you’ll need to invest minimal time – a couple of hours. That’s the time it takes to sign up and get going.
+
+The second caveat? Quality control. I mentioned editing earlier. Fact-check the outputs. Apply some good old-fashioned, AI-free cognitive street smarts. You may catch mistakes.
+
+It’s your job to catch them. And then reiterate what you want, revise, and re-test. When you’re finally happy, you publish.
+
+So here was my workflow.
+
+**Step 1: The LLM.** I used Claude Opus 4.5. I explained my idea for a market dashboard. I wanted indicators that tend to predate bull and bear markets; perhaps stats like the P/E and Buffett ratios; and historical context.
+
+Claude did some research and suggested adding the credit spread.
+
+I went out and found the data. It was relatively easy. It’s linked on the page. I could have made it even easier by letting Claude find the data, but did not want it scraping from commercial websites.
+
+I found trustworthy spreadsheets, most on the U.S. Federal Reserve website. And for some, to keep them updated in real time, I signed up for an API connection to the U.S. Fed site.
+
+Then Claude produced a first draft of my app. It spit out a bunch of code and – hello! – there was my website.
+
+We went back and forth on some details – like the look of the page; what colors to place and where; what years to include; what text should appear for scenario A, B, C and D, to make sure the page says different things at, say, the 50th and 80th percentiles.
+
+I made more serious editorial calls.
+
+As discussed, I found mistakes. I also added and dropped elements; for example, I thought the credit spread added little to the formula but unneeded complexity, so I settled on a compromise – keep it on the page, but not in the composite score.
+
+I also insisted on explainability. I asked Claude to link to our data sources, and to add a section explaining our methodology, including our expanded dataset for a broadened Buffett index.
+
+When I was happy with the result, it was time to publish. But where?
+
+**Step 2: Github.** The code needs to live somewhere. This is its home. I created a repository for this project. In that folder, I created files. In those files, I copied and pasted Claude’s code.
+
+There are different ways to do this. You can run both Claude Code and Github locally on your computer, so it accesses your folders. You can use agentic tools, making them more autonomous. I copied and pasted.
+
+Claude would literally instruct me: Take this code. Copy and paste it into this file on Github. Press the Commit button. It worked fine.
+
+**Step 3: Railway.** You need a place to run the latest market numbers. Railway takes the numbers from my Federal Reserve API connection and feeds them into my calculator, 24/7. Please note: the value of the S&P is only updated once daily on the Fed site.
+
+**Step 4: Vercel.** This hosts the website – the front end. This is the page you see. It connects to Github’s code and pulls the latest data from Railway. All I had to do, literally, was sign up and create a project name on these pages.
+
+Don’t be intimidated by the number of tools! For most of them it was basically “click”-“create name”-“click”.
+
+Most were free, although, full disclosure, I do spend a few dollars a month on Railway depending on site traffic – probably $5-$10.
+
+I use the free tier on Github, the free tier on Vercel, and could use the free Claude tier but subscribe to Claude Pro for $20 as I’m using it often.
+
+**Step 5: Art for the site.** Claude doesn’t really do pictures. So I asked Google Gemini to generate images of a bull and a bear, downloaded one I liked, and asked Claude for instructions about how to integrate it atop the page.
+
+And that’s it. I had a website.
+
+Until a few months ago, it would not even have occurred to me to try doing this. Until a few weeks ago, I couldn’t. Still today, a professional programmer would do an infinitely better job, adding security, aesthetics, and functions I’d overlook.
+
+But you know what? I made this. And you can, too.
+
+I’d love to hear your use cases. Is there anything you’d like to build a dashboard for? Or, if you’d like help, something you’d like me to try here? Feel free to reach out.
+
+I’m blogging about what I’m studying: practical, ethical uses for AI. I’m studying AI Management at Georgetown University. My posts will be infrequent, at first. As I learn more, I’ll post more. I’d be delighted if you subscribed.
+
+-----
+
+## Contact
+
+For inquiries about AI consulting, speaking, or collaboration:
+https://alexpanetta.substack.com
+https://substack.com/@alexpanetta
