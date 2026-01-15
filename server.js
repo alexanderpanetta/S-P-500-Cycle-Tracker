@@ -18,14 +18,18 @@ const cache = {
     creditSpread: { data: null, timestamp: 0 },
     buffett: { data: null, timestamp: 0 },
     cape: { data: null, timestamp: 0 },
-    shillerData: { data: null, timestamp: 0 }
+    shillerData: { data: null, timestamp: 0 },
+    historicalCape: { data: null, timestamp: 0 },
+    historicalBuffett: { data: null, timestamp: 0 }
 };
 
 const CACHE_DURATION = {
     creditSpread: 60 * 60 * 1000,         // 1 hour
     buffett: 24 * 60 * 60 * 1000,         // 24 hours
     cape: 24 * 60 * 60 * 1000,            // 24 hours
-    shillerData: 24 * 60 * 60 * 1000      // 24 hours
+    shillerData: 24 * 60 * 60 * 1000,     // 24 hours
+    historicalCape: 24 * 60 * 60 * 1000,  // 24 hours
+    historicalBuffett: 24 * 60 * 60 * 1000 // 24 hours
 };
 
 // Historical percentile data
@@ -65,7 +69,7 @@ const HISTORICAL = {
 function interpolatePercentile(value, percentiles) {
     if (value <= percentiles[0].value) return percentiles[0].pct;
     if (value >= percentiles[percentiles.length - 1].value) return 100;
-    
+
     for (let i = 1; i < percentiles.length; i++) {
         if (value <= percentiles[i].value) {
             const prev = percentiles[i - 1];
@@ -81,7 +85,7 @@ function isCacheValid(key) {
     return cache[key].data && (Date.now() - cache[key].timestamp < CACHE_DURATION[key]);
 }
 
-// Fetch and parse Shiller Excel data
+// Fetch and parse Shiller Excel data (latest value only)
 async function fetchShillerData() {
     if (isCacheValid('shillerData')) {
         return cache.shillerData.data;
@@ -92,22 +96,22 @@ async function fetchShillerData() {
         const response = await fetch(SHILLER_URL);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        
+
         const workbook = XLSX.read(buffer, { type: 'buffer' });
-        
+
         console.log('Available sheets:', workbook.SheetNames);
-        
+
         // Find the sheet with data - try "Data" first, then the largest sheet
-        let sheetName = workbook.SheetNames.find(name => name.toLowerCase() === 'data') 
+        let sheetName = workbook.SheetNames.find(name => name.toLowerCase() === 'data')
                      || workbook.SheetNames.find(name => name.toLowerCase().includes('data'))
                      || workbook.SheetNames[0];
-        
+
         // If first sheet is small (like a disclaimer), try the next one
         let sheet = workbook.Sheets[sheetName];
         let data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        
+
         console.log('Trying sheet:', sheetName, 'rows:', data.length);
-        
+
         // If this sheet has very few rows, try other sheets
         if (data.length < 50 && workbook.SheetNames.length > 1) {
             for (const name of workbook.SheetNames) {
@@ -122,28 +126,16 @@ async function fetchShillerData() {
                 }
             }
         }
-        
+
         console.log('Using sheet:', sheetName, 'with', data.length, 'rows');
-        
-        console.log('Excel parsed, total rows:', data.length);
-        console.log('First few rows:', JSON.stringify(data.slice(0, 10), null, 2));
-        
-        // Find the CAPE column and get latest value
-        // Shiller's format has CAPE in column M (index 12)
-        // The header is multi-line, so we'll just use the known column index
-        
+
         let capeColumnIndex = 12; // Column M in Excel (0-indexed)
         let headerRowIndex = 8;   // Data starts at row 9 (0-indexed = 8)
-        
-        console.log('Using CAPE column index:', capeColumnIndex);
-        
+
         // Get the latest non-empty CAPE value
         let latestCape = null;
         let latestDate = null;
-        
-        // Log last few rows to debug
-        console.log('Last 5 rows:', JSON.stringify(data.slice(-5), null, 2));
-        
+
         for (let i = data.length - 1; i > headerRowIndex; i--) {
             const row = data[i];
             if (row && row[capeColumnIndex] !== undefined && row[capeColumnIndex] !== null && row[capeColumnIndex] !== '') {
@@ -156,27 +148,313 @@ async function fetchShillerData() {
                 }
             }
         }
-        
+
         const result = {
             cape: latestCape,
             date: latestDate,
             source: 'Shiller/Yale',
             fetchedAt: new Date().toISOString()
         };
-        
+
         cache.shillerData = { data: result, timestamp: Date.now() };
         console.log('Shiller data fetched:', result);
         return result;
-        
+
     } catch (error) {
         console.error('Error fetching Shiller data:', error);
-        // Return cached data if available, otherwise fallback
         if (cache.shillerData.data) {
             return cache.shillerData.data;
         }
         return { cape: 38.2, date: 'fallback', source: 'static', error: error.message };
     }
 }
+
+// Fetch FULL historical CAPE data from Shiller Excel
+async function fetchHistoricalCape() {
+    if (isCacheValid('historicalCape')) {
+        return cache.historicalCape.data;
+    }
+
+    try {
+        console.log('Fetching historical CAPE data...');
+        const response = await fetch(SHILLER_URL);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const workbook = XLSX.read(buffer, { type: 'buffer' });
+
+        // Find the data sheet
+        let sheetName = workbook.SheetNames.find(name => name.toLowerCase() === 'data')
+                     || workbook.SheetNames.find(name => name.toLowerCase().includes('data'))
+                     || workbook.SheetNames[0];
+
+        let sheet = workbook.Sheets[sheetName];
+        let data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        // If this sheet has very few rows, try other sheets
+        if (data.length < 50 && workbook.SheetNames.length > 1) {
+            for (const name of workbook.SheetNames) {
+                if (name === sheetName) continue;
+                const testSheet = workbook.Sheets[name];
+                const testData = XLSX.utils.sheet_to_json(testSheet, { header: 1 });
+                if (testData.length > data.length) {
+                    sheetName = name;
+                    sheet = testSheet;
+                    data = testData;
+                }
+            }
+        }
+
+        const capeColumnIndex = 12; // Column M - CAPE
+        const headerRowIndex = 8;   // Data starts at row 9
+
+        const historicalData = [];
+
+        for (let i = headerRowIndex + 1; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row[0] === undefined || row[0] === null || row[0] === '') continue;
+
+            const dateValue = row[0];
+            const capeValue = parseFloat(row[capeColumnIndex]);
+
+            if (isNaN(capeValue) || capeValue <= 0) continue;
+
+            // Parse date - Shiller uses decimal format like 1881.01
+            let year, month;
+            if (typeof dateValue === 'number') {
+                year = Math.floor(dateValue);
+                month = Math.round((dateValue - year) * 100);
+                if (month === 0) month = 1;
+            } else {
+                continue;
+            }
+
+            // Skip invalid years
+            if (year < 1881 || year > 2100) continue;
+
+            historicalData.push({
+                year: year,
+                month: month,
+                date: `${year}-${String(month).padStart(2, '0')}`,
+                value: Math.round(capeValue * 100) / 100
+            });
+        }
+
+        console.log(`Parsed ${historicalData.length} CAPE data points`);
+
+        // Sample to ~50 points for charting (yearly averages for older data, monthly for recent)
+        const sampledData = sampleCapeData(historicalData);
+
+        const result = {
+            full: historicalData,
+            sampled: sampledData,
+            count: historicalData.length,
+            startDate: historicalData[0]?.date,
+            endDate: historicalData[historicalData.length - 1]?.date,
+            fetchedAt: new Date().toISOString()
+        };
+
+        cache.historicalCape = { data: result, timestamp: Date.now() };
+        return result;
+
+    } catch (error) {
+        console.error('Error fetching historical CAPE:', error);
+        return { error: error.message, sampled: [], full: [] };
+    }
+}
+
+// Sample CAPE data for charting
+function sampleCapeData(data) {
+    if (!data || data.length === 0) return [];
+
+    const sampled = [];
+    const currentYear = new Date().getFullYear();
+
+    // Group by year
+    const byYear = {};
+    for (const point of data) {
+        if (!byYear[point.year]) {
+            byYear[point.year] = [];
+        }
+        byYear[point.year].push(point.value);
+    }
+
+    // For years before 2000, take yearly average every 5-10 years
+    // For 2000+, take yearly averages
+    const years = Object.keys(byYear).map(Number).sort((a, b) => a - b);
+
+    for (const year of years) {
+        const values = byYear[year];
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+
+        if (year < 1950) {
+            // Every 10 years + key years
+            if (year % 10 === 0 || year === 1929 || year === 1932 || year === 1921) {
+                sampled.push({ year, value: Math.round(avg * 10) / 10 });
+            }
+        } else if (year < 2000) {
+            // Every 5 years + key years
+            if (year % 5 === 0 || year === 1966 || year === 1974 || year === 1982 || year === 1987) {
+                sampled.push({ year, value: Math.round(avg * 10) / 10 });
+            }
+        } else {
+            // Every year for recent data
+            sampled.push({ year, value: Math.round(avg * 10) / 10 });
+        }
+    }
+
+    return sampled;
+}
+
+// Fetch historical Buffett Indicator from FRED
+async function fetchHistoricalBuffett() {
+    if (isCacheValid('historicalBuffett')) {
+        return cache.historicalBuffett.data;
+    }
+
+    try {
+        console.log('Fetching historical Buffett data from FRED...');
+
+        // Fetch all historical data for both series
+        const [mcResponse, gdpResponse] = await Promise.all([
+            fetch(`${FRED_BASE}?series_id=BOGZ1LM883164115Q&api_key=${FRED_API_KEY}&file_type=json&sort_order=asc`),
+            fetch(`${FRED_BASE}?series_id=GDP&api_key=${FRED_API_KEY}&file_type=json&sort_order=asc`)
+        ]);
+
+        const mcData = await mcResponse.json();
+        const gdpData = await gdpResponse.json();
+
+        if (!mcData.observations || !gdpData.observations) {
+            throw new Error('No data from FRED');
+        }
+
+        // Create lookup for GDP by quarter
+        const gdpByQuarter = {};
+        for (const obs of gdpData.observations) {
+            if (obs.value === '.') continue;
+            const date = obs.date.substring(0, 7); // YYYY-MM
+            gdpByQuarter[date] = parseFloat(obs.value) * 1000; // Convert to millions
+        }
+
+        const historicalData = [];
+
+        for (const obs of mcData.observations) {
+            if (obs.value === '.') continue;
+
+            const date = obs.date.substring(0, 7);
+            const marketCap = parseFloat(obs.value);
+            const gdp = gdpByQuarter[date];
+
+            if (!gdp || isNaN(marketCap)) continue;
+
+            const buffettValue = (marketCap / gdp) * 100;
+            const year = parseInt(obs.date.substring(0, 4));
+            const quarter = Math.ceil(parseInt(obs.date.substring(5, 7)) / 3);
+
+            historicalData.push({
+                year: year,
+                quarter: quarter,
+                date: obs.date,
+                value: Math.round(buffettValue)
+            });
+        }
+
+        console.log(`Parsed ${historicalData.length} Buffett data points`);
+
+        // Sample for charting
+        const sampledData = sampleBuffettData(historicalData);
+
+        const result = {
+            full: historicalData,
+            sampled: sampledData,
+            count: historicalData.length,
+            startDate: historicalData[0]?.date,
+            endDate: historicalData[historicalData.length - 1]?.date,
+            fetchedAt: new Date().toISOString()
+        };
+
+        cache.historicalBuffett = { data: result, timestamp: Date.now() };
+        return result;
+
+    } catch (error) {
+        console.error('Error fetching historical Buffett:', error);
+        return { error: error.message, sampled: [], full: [] };
+    }
+}
+
+// Sample Buffett data for charting
+function sampleBuffettData(data) {
+    if (!data || data.length === 0) return [];
+
+    const sampled = [];
+
+    // Group by year, take Q4 or latest available
+    const byYear = {};
+    for (const point of data) {
+        if (!byYear[point.year] || point.quarter >= byYear[point.year].quarter) {
+            byYear[point.year] = point;
+        }
+    }
+
+    const years = Object.keys(byYear).map(Number).sort((a, b) => a - b);
+
+    for (const year of years) {
+        const point = byYear[year];
+
+        if (year < 1980) {
+            // Every 5 years + key years
+            if (year % 5 === 0 || year === 1974 || year === 1982) {
+                sampled.push({ year, value: point.value });
+            }
+        } else if (year < 2000) {
+            // Every 3 years + key years
+            if (year % 3 === 0 || year === 1987 || year === 1990) {
+                sampled.push({ year, value: point.value });
+            }
+        } else {
+            // Every year for recent data
+            sampled.push({ year, value: point.value });
+        }
+    }
+
+    return sampled;
+}
+
+// NEW ENDPOINT: Historical data for charts
+app.get('/api/historical', async (req, res) => {
+    try {
+        const [capeHistory, buffettHistory] = await Promise.all([
+            fetchHistoricalCape(),
+            fetchHistoricalBuffett()
+        ]);
+
+        res.json({
+            cape: {
+                data: capeHistory.sampled,
+                fullCount: capeHistory.count,
+                startDate: capeHistory.startDate,
+                endDate: capeHistory.endDate
+            },
+            buffett: {
+                data: buffettHistory.sampled,
+                fullCount: buffettHistory.count,
+                startDate: buffettHistory.startDate,
+                endDate: buffettHistory.endDate
+            },
+            isLive: !capeHistory.error && !buffettHistory.error,
+            updatedAt: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('Historical data error:', error);
+        res.status(500).json({
+            error: error.message,
+            isLive: false,
+            cape: { data: [] },
+            buffett: { data: [] }
+        });
+    }
+});
 
 // Endpoint: Credit Spread
 app.get('/api/credit-spread', async (req, res) => {
@@ -369,7 +647,9 @@ app.get('/api/health', (req, res) => {
         cacheStatus: {
             cape: isCacheValid('cape') ? 'valid' : 'expired',
             buffett: isCacheValid('buffett') ? 'valid' : 'expired',
-            creditSpread: isCacheValid('creditSpread') ? 'valid' : 'expired'
+            creditSpread: isCacheValid('creditSpread') ? 'valid' : 'expired',
+            historicalCape: isCacheValid('historicalCape') ? 'valid' : 'expired',
+            historicalBuffett: isCacheValid('historicalBuffett') ? 'valid' : 'expired'
         },
         timestamp: new Date().toISOString()
     });
@@ -381,6 +661,7 @@ app.get('/', (req, res) => {
         name: 'S&P 500 Cycle Tracker API',
         endpoints: [
             '/api/indicators - All indicators (recommended)',
+            '/api/historical - Historical time series for charts (NEW)',
             '/api/cape - CAPE ratio from Shiller data',
             '/api/buffett - Buffett Indicator from FRED',
             '/api/credit-spread - Credit spread from FRED',
