@@ -10,8 +10,43 @@ app.use(express.json());
 const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
 const FRED_API_KEY = process.env.FRED_API_KEY || 'f70e01eb152c2ee5828ff8d457ff3e4f';
 
-// Shiller data URL (Excel file from shillerdata.com)
-const SHILLER_URL = 'https://img1.wsimg.com/blobby/go/e5e77e0b-59d1-44d9-ab25-4763ac982e53/downloads/1b9b0a8a-aa83-40bc-a151-c19ef387b564/ie_data.xls';
+// Shiller data - resolve the current download URL dynamically from shillerdata.com
+const SHILLER_PAGE_URL = 'https://shillerdata.com/';
+let resolvedShillerUrl = null;
+
+async function getShillerUrl() {
+    // Return cached URL if we resolved it recently (cache for 24 hours)
+    if (resolvedShillerUrl && Date.now() - resolvedShillerUrl.timestamp < 24 * 60 * 60 * 1000) {
+        return resolvedShillerUrl.url;
+    }
+
+    try {
+        console.log('Resolving Shiller download URL from shillerdata.com...');
+        const response = await fetch(SHILLER_PAGE_URL);
+        const html = await response.text();
+
+        // Look for the ie_data.xls download link in the page HTML
+        const match = html.match(/(?:https?:)?\/\/img1\.wsimg\.com\/blobby\/go\/[^"'\s]+ie_data\.xls[^"'\s]*/i);
+        if (match) {
+            let url = match[0];
+            // Ensure it has a protocol
+            if (url.startsWith('//')) url = 'https:' + url;
+            // Strip any cache-busting query params for cleaner caching
+            url = url.split('?')[0];
+            resolvedShillerUrl = { url, timestamp: Date.now() };
+            console.log('Resolved Shiller URL:', url);
+            return url;
+        }
+
+        throw new Error('Could not find ie_data.xls link on shillerdata.com');
+    } catch (error) {
+        console.error('Failed to resolve Shiller URL:', error.message);
+        // Fall back to last known URL
+        if (resolvedShillerUrl) return resolvedShillerUrl.url;
+        // Last-resort hardcoded fallback
+        return 'https://img1.wsimg.com/blobby/go/e5e77e0b-59d1-44d9-ab25-4763ac982e53/downloads/3228b83a-7bad-4e69-b405-71e3a1ca6351/ie_data.xls';
+    }
+}
 
 // Cache storage
 const cache = {
@@ -92,8 +127,9 @@ async function fetchShillerData() {
     }
 
     try {
-        console.log('Fetching Shiller data from Yale...');
-        const response = await fetch(SHILLER_URL);
+        const shillerUrl = await getShillerUrl();
+        console.log('Fetching Shiller data from:', shillerUrl);
+        const response = await fetch(shillerUrl);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
@@ -176,8 +212,9 @@ async function fetchHistoricalCape() {
     }
 
     try {
-        console.log('Fetching historical CAPE data...');
-        const response = await fetch(SHILLER_URL);
+        const shillerUrl = await getShillerUrl();
+        console.log('Fetching historical CAPE data from:', shillerUrl);
+        const response = await fetch(shillerUrl);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
