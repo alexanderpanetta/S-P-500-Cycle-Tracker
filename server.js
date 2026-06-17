@@ -81,20 +81,24 @@ const HISTORICAL = {
     },
     cape: {
         getPercentile: (value) => {
+            // Empirical quantiles from 1,746 months of Shiller CAPE data, 1881-2026
             const percentiles = [
-                { value: 6.6, pct: 0 }, { value: 10.0, pct: 10 }, { value: 15.0, pct: 25 },
-                { value: 20.5, pct: 50 }, { value: 25.0, pct: 75 }, { value: 30.0, pct: 90 },
-                { value: 35.0, pct: 95 }, { value: 40.0, pct: 98 }, { value: 48.1, pct: 100 }
+                { value: 4.8, pct: 0 }, { value: 9.3, pct: 10 }, { value: 12.0, pct: 25 },
+                { value: 16.6, pct: 50 }, { value: 21.5, pct: 75 }, { value: 28.1, pct: 90 },
+                { value: 32.8, pct: 95 }, { value: 38.0, pct: 98 }, { value: 41.2, pct: 99 },
+                { value: 44.2, pct: 100 }
             ];
             return interpolatePercentile(value, percentiles);
         }
     },
     buffett: {
         getPercentile: (value) => {
+            // Empirical quantiles from 302 quarters of FRED Z.1 market cap / GDP, 1947-2026
             const percentiles = [
-                { value: 35, pct: 0 }, { value: 50, pct: 15 }, { value: 70, pct: 35 },
-                { value: 85, pct: 50 }, { value: 110, pct: 70 }, { value: 140, pct: 85 },
-                { value: 175, pct: 93 }, { value: 200, pct: 97 }, { value: 240, pct: 100 }
+                { value: 35.9, pct: 0 }, { value: 47.0, pct: 10 }, { value: 59.2, pct: 25 },
+                { value: 84.3, pct: 50 }, { value: 120.8, pct: 75 }, { value: 164.6, pct: 90 },
+                { value: 201.7, pct: 95 }, { value: 234.0, pct: 98 }, { value: 245.1, pct: 99 },
+                { value: 264.6, pct: 100 }
             ];
             return interpolatePercentile(value, percentiles);
         }
@@ -553,7 +557,7 @@ app.get('/api/buffett', async (req, res) => {
                 percentile: percentile,
                 marketCapDate: mcData.observations[0].date,
                 gdpDate: gdpData.observations[0].date,
-                isAllTimeHigh: buffettValue >= 240,
+                isAllTimeHigh: buffettValue >= 245,
                 updatedAt: new Date().toISOString()
             };
 
@@ -649,7 +653,7 @@ app.get('/api/indicators', async (req, res) => {
                 value: buffettValue,
                 percentile: buffettPercentile,
                 date: mcData.observations[0].date,
-                isAllTimeHigh: buffettValue >= 240
+                isAllTimeHigh: buffettValue >= 245
             },
             creditSpread: {
                 value: creditValue,
@@ -667,7 +671,7 @@ app.get('/api/indicators', async (req, res) => {
             score: 99,
             sp500: { value: 6845.50, timestamp: 'Dec 31 close', source: 'static' },
             cape: { value: 39.4, percentile: 98, source: 'static' },
-            buffett: { value: 244, percentile: 100, isAllTimeHigh: true },
+            buffett: { value: 244, percentile: 99, isAllTimeHigh: true },
             creditSpread: { value: 1.69, percentile: 19 },
             isLive: false,
             error: error.message,
