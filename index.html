@@ -589,7 +589,7 @@
                     <div class="indicator-dot dot-red"></div>
                 </div>
                 <div class="indicator-value" id="buffettValue">260%</div>
-                <div class="indicator-meta" id="buffettPercentile">All-time high (data since 1947)</div>
+                <div class="indicator-meta" id="buffettPercentile">Record territory — top 1% since 1947</div>
                 <div class="percentile-bar">
                     <div class="percentile-fill" id="buffettFill" style="width: 100%; background: var(--accent-red);"></div>
                 </div>
@@ -870,7 +870,7 @@
                 // Update Buffett
                 document.getElementById('buffettValue').textContent = data.buffett.value + '%';
                 document.getElementById('buffettPercentile').textContent = data.buffett.isAllTimeHigh ?
-                    'All-time high' : data.buffett.percentile + 'th percentile';
+                    'Record territory — top 1% since 1947' : data.buffett.percentile + 'th percentile';
                 document.getElementById('buffettFill').style.width = Math.min(data.buffett.percentile, 100) + '%';
 
                 // Update Credit Spread
