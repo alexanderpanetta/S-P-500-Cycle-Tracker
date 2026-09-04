@@ -55,7 +55,8 @@ const cache = {
     cape: { data: null, timestamp: 0 },
     shillerData: { data: null, timestamp: 0 },
     historicalCape: { data: null, timestamp: 0 },
-    historicalBuffett: { data: null, timestamp: 0 }
+    historicalBuffett: { data: null, timestamp: 0 },
+    historicalCreditSpread: { data: null, timestamp: 0 }
 };
 
 const CACHE_DURATION = {
@@ -64,7 +65,8 @@ const CACHE_DURATION = {
     cape: 24 * 60 * 60 * 1000,            // 24 hours
     shillerData: 24 * 60 * 60 * 1000,     // 24 hours
     historicalCape: 24 * 60 * 60 * 1000,  // 24 hours
-    historicalBuffett: 24 * 60 * 60 * 1000 // 24 hours
+    historicalBuffett: 24 * 60 * 60 * 1000, // 24 hours
+    historicalCreditSpread: 24 * 60 * 60 * 1000 // 24 hours
 };
 
 // Historical percentile data
@@ -147,6 +149,18 @@ async function getBuffettPercentile(value) {
         console.error('Live Buffett percentile failed, using table:', e.message);
     }
     return { exact: HISTORICAL.buffett.getPercentile(value), source: 'table', n: null };
+}
+
+// Live credit-spread percentile, falling back to the static table if FRED is unreachable
+async function getCreditSpreadPercentile(value) {
+    try {
+        const hist = await fetchHistoricalCreditSpread();
+        const pct = percentileRank(value, hist.values || []);
+        if (pct !== null) return { exact: pct, source: 'live', n: hist.values.length };
+    } catch (e) {
+        console.error('Live credit-spread percentile failed, using table:', e.message);
+    }
+    return { exact: HISTORICAL.creditSpread.getPercentile(value), source: 'table', n: null };
 }
 
 function interpolatePercentile(value, percentiles) {
@@ -467,6 +481,41 @@ async function fetchHistoricalBuffett() {
     }
 }
 
+// Fetch FULL daily BAA10Y history (distribution only - not charted)
+async function fetchHistoricalCreditSpread() {
+    if (isCacheValid('historicalCreditSpread')) {
+        return cache.historicalCreditSpread.data;
+    }
+
+    const response = await fetch(`${FRED_BASE}?series_id=BAA10Y&api_key=${FRED_API_KEY}&file_type=json&sort_order=asc`);
+    const data = await response.json();
+
+    if (!data.observations) {
+        throw new Error('No BAA10Y data from FRED');
+    }
+
+    // Store values only - the distribution is all we need, and the full series
+    // is ~10k daily points
+    const values = [];
+    for (const obs of data.observations) {
+        if (obs.value === '.') continue;
+        const v = parseFloat(obs.value);
+        if (Number.isFinite(v)) values.push(v);
+    }
+
+    const result = {
+        values: values,
+        count: values.length,
+        startDate: data.observations[0]?.date,
+        endDate: data.observations[data.observations.length - 1]?.date,
+        fetchedAt: new Date().toISOString()
+    };
+
+    console.log(`Parsed ${values.length} BAA10Y observations`);
+    cache.historicalCreditSpread = { data: result, timestamp: Date.now() };
+    return result;
+}
+
 // Sample Buffett data for charting
 function sampleBuffettData(data) {
     if (!data || data.length === 0) return [];
@@ -603,11 +652,14 @@ app.get('/api/credit-spread', async (req, res) => {
         if (data.observations && data.observations.length > 0) {
             const latest = data.observations[0];
             const value = parseFloat(latest.value);
-            const percentile = HISTORICAL.creditSpread.getPercentile(value);
+            const pct = await getCreditSpreadPercentile(value);
 
             const result = {
                 value: value,
-                percentile: percentile,
+                percentile: Math.round(pct.exact),
+                percentileExact: Math.round(pct.exact * 10) / 10,
+                percentileSource: pct.source,
+                observations: pct.n,
                 date: latest.date,
                 updatedAt: new Date().toISOString()
             };
@@ -691,7 +743,11 @@ app.get('/api/indicators', async (req, res) => {
             fetch(`${FRED_BASE}?series_id=BAA10Y&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json()),
             fetchLatestBuffett(),
             fetch(`${FRED_BASE}?series_id=SP500&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json()),
-            fetchHistoricalCape()   // warms the 24h cache the CAPE percentile reads
+            // Warm the 24h caches the percentile ranks read. Failures are swallowed
+            // here so one bad source can't drop the whole endpoint to static data --
+            // the percentile getters fall back to their tables individually.
+            fetchHistoricalCape().catch(() => null),
+            fetchHistoricalCreditSpread().catch(() => null)
         ]);
 
         // Parse CAPE
@@ -701,7 +757,8 @@ app.get('/api/indicators', async (req, res) => {
 
         // Parse Credit Spread
         const creditValue = parseFloat(creditResponse.observations[0].value);
-        const creditPercentile = HISTORICAL.creditSpread.getPercentile(creditValue);
+        const creditPct = await getCreditSpreadPercentile(creditValue);
+        const creditPercentile = Math.round(creditPct.exact);
 
         // Parse Buffett (market cap and GDP joined on the same quarter)
         const buffettValue = buffettLatest.value;
@@ -746,6 +803,9 @@ app.get('/api/indicators', async (req, res) => {
             creditSpread: {
                 value: creditValue,
                 percentile: creditPercentile,
+                percentileExact: Math.round(creditPct.exact * 10) / 10,
+                percentileSource: creditPct.source,
+                observations: creditPct.n,
                 date: creditResponse.observations[0].date
             },
             isLive: true,
