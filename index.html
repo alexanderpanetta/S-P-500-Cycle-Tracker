@@ -675,15 +675,17 @@
 
                 <p>
                     <strong>Composite Score</strong> is the average of two percentile rankings: the CAPE ratio's percentile
-                    (vs. all monthly observations since 1881) and the Buffett Indicator's percentile (vs. all quarterly
-                    observations since 1947). Example score: (98 + 100) / 2 = <strong>99</strong>.
+                    (vs. all <span id="capeObs">1,749</span> monthly observations since 1881) and the Buffett Indicator's
+                    percentile (vs. all <span id="buffettObs">302</span> quarterly observations since 1947). Both percentiles
+                    are recomputed from the full source series each time the data refreshes; the score is rounded to the
+                    nearest half point.
                 </p>
 
                 <p>
                     <strong>Credit Spread</strong> is shown separately as a sentiment indicator. It measures how much extra
                     yield investors demand for corporate bonds over Treasuries. Low spreads indicate complacency—investors
-                    aren't worried about defaults. Historically, spreads this low (19th percentile) have preceded major
-                    market peaks, though they don't predict timing.
+                    aren't worried about defaults. Historically, spreads this low (<span id="creditPercentileInline">11</span>th
+                    percentile) have preceded major market peaks, though they don't predict timing.
                 </p>
 
                 <p>
@@ -880,6 +882,13 @@
                 // Update Credit Spread
                 document.getElementById('creditValue').textContent = data.creditSpread.value.toFixed(2) + '%';
                 document.getElementById('creditPercentile').textContent = data.creditSpread.percentile;
+                document.getElementById('creditPercentileInline').textContent = data.creditSpread.percentile;
+                if (data.cape.observations) {
+                    document.getElementById('capeObs').textContent = data.cape.observations.toLocaleString();
+                }
+                if (data.buffett.observations) {
+                    document.getElementById('buffettObs').textContent = data.buffett.observations.toLocaleString();
+                }
                 document.getElementById('creditFill').style.width = data.creditSpread.percentile + '%';
 
                 // Update timestamp (use US Eastern time to match market data)

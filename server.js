@@ -106,6 +106,49 @@ const HISTORICAL = {
     }
 };
 
+// Empirical percentile rank: share of historical observations below `value`.
+// This is what the site's methodology actually describes ("vs. all monthly
+// observations since 1881" / "all quarterly observations since 1947"), so it is
+// computed from the live source series rather than a hand-maintained table.
+function percentileRank(value, values) {
+    if (!Array.isArray(values) || values.length === 0) return null;
+    if (!Number.isFinite(value)) return null;
+    let below = 0;
+    for (const v of values) {
+        if (Number.isFinite(v) && v < value) below++;
+    }
+    return (below / values.length) * 100;
+}
+
+// Round to the nearest 0.5 (whole numbers and .5 only)
+function roundToHalf(x) {
+    return Math.round(x * 2) / 2;
+}
+
+// Live CAPE percentile, falling back to the static table if Shiller is unreachable
+async function getCapePercentile(value) {
+    try {
+        const hist = await fetchHistoricalCape();
+        const pct = percentileRank(value, (hist.full || []).map(p => p.value));
+        if (pct !== null) return { exact: pct, source: 'live', n: hist.full.length };
+    } catch (e) {
+        console.error('Live CAPE percentile failed, using table:', e.message);
+    }
+    return { exact: HISTORICAL.cape.getPercentile(value), source: 'table', n: null };
+}
+
+// Live Buffett percentile, falling back to the static table if FRED is unreachable
+async function getBuffettPercentile(value) {
+    try {
+        const hist = await fetchHistoricalBuffett();
+        const pct = percentileRank(value, (hist.full || []).map(p => p.value));
+        if (pct !== null) return { exact: pct, source: 'live', n: hist.full.length };
+    } catch (e) {
+        console.error('Live Buffett percentile failed, using table:', e.message);
+    }
+    return { exact: HISTORICAL.buffett.getPercentile(value), source: 'table', n: null };
+}
+
 function interpolatePercentile(value, percentiles) {
     if (value <= percentiles[0].value) return percentiles[0].pct;
     if (value >= percentiles[percentiles.length - 1].value) return 100;
@@ -589,9 +632,13 @@ app.get('/api/buffett', async (req, res) => {
 
         const latest = await fetchLatestBuffett();
 
+        const pct = await getBuffettPercentile(latest.value);
         const result = {
             value: latest.value,
-            percentile: HISTORICAL.buffett.getPercentile(latest.value),
+            percentile: Math.round(pct.exact),
+            percentileExact: Math.round(pct.exact * 10) / 10,
+            percentileSource: pct.source,
+            observations: pct.n,
             marketCapDate: latest.marketCapDate,
             gdpDate: latest.gdpDate,
             isAllTimeHigh: latest.isAllTimeHigh,
@@ -614,11 +661,14 @@ app.get('/api/cape', async (req, res) => {
         }
 
         const shillerData = await fetchShillerData();
-        const percentile = HISTORICAL.cape.getPercentile(shillerData.cape);
+        const pct = await getCapePercentile(shillerData.cape);
 
         const result = {
             value: shillerData.cape,
-            percentile: percentile,
+            percentile: Math.round(pct.exact),
+            percentileExact: Math.round(pct.exact * 10) / 10,
+            percentileSource: pct.source,
+            observations: pct.n,
             date: shillerData.date,
             source: shillerData.source,
             updatedAt: new Date().toISOString()
@@ -640,12 +690,14 @@ app.get('/api/indicators', async (req, res) => {
             fetchShillerData(),
             fetch(`${FRED_BASE}?series_id=BAA10Y&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json()),
             fetchLatestBuffett(),
-            fetch(`${FRED_BASE}?series_id=SP500&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json())
+            fetch(`${FRED_BASE}?series_id=SP500&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json()),
+            fetchHistoricalCape()   // warms the 24h cache the CAPE percentile reads
         ]);
 
         // Parse CAPE
         const capeValue = shillerData.cape;
-        const capePercentile = HISTORICAL.cape.getPercentile(capeValue);
+        const capePct = await getCapePercentile(capeValue);
+        const capePercentile = Math.round(capePct.exact);
 
         // Parse Credit Spread
         const creditValue = parseFloat(creditResponse.observations[0].value);
@@ -654,10 +706,12 @@ app.get('/api/indicators', async (req, res) => {
         // Parse Buffett (market cap and GDP joined on the same quarter)
         const buffettValue = buffettLatest.value;
         console.log('Buffett calc:', buffettLatest);
-        const buffettPercentile = HISTORICAL.buffett.getPercentile(buffettValue);
+        const buffettPct = await getBuffettPercentile(buffettValue);
+        const buffettPercentile = Math.round(buffettPct.exact);
 
-        // Composite score = average of CAPE and Buffett percentiles
-        const compositeScore = Math.round((capePercentile + buffettPercentile) / 2 * 2) / 2; // Round to nearest 0.5
+        // Composite score = average of the two percentile ranks, computed from the
+        // unrounded ranks and then snapped to the nearest 0.5
+        const compositeScore = roundToHalf((capePct.exact + buffettPct.exact) / 2);
 
         // Get S&P 500 price from FRED
         const sp500Value = parseFloat(sp500Response.observations[0].value);
@@ -674,12 +728,18 @@ app.get('/api/indicators', async (req, res) => {
             cape: {
                 value: capeValue,
                 percentile: capePercentile,
+                percentileExact: Math.round(capePct.exact * 10) / 10,
+                percentileSource: capePct.source,
+                observations: capePct.n,
                 date: shillerData.date,
                 source: 'Shiller/Yale'
             },
             buffett: {
                 value: buffettValue,
                 percentile: buffettPercentile,
+                percentileExact: Math.round(buffettPct.exact * 10) / 10,
+                percentileSource: buffettPct.source,
+                observations: buffettPct.n,
                 date: buffettLatest.marketCapDate,
                 isAllTimeHigh: buffettLatest.isAllTimeHigh
             },
