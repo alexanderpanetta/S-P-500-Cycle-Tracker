@@ -576,10 +576,10 @@
                     <span class="indicator-name">CAPE Ratio (Shiller P/E)</span>
                     <div class="indicator-dot dot-red"></div>
                 </div>
-                <div class="indicator-value" id="capeValue">39.9</div>
-                <div class="indicator-meta"><span id="capePercentile">98</span>th percentile since 1881</div>
+                <div class="indicator-value" id="capeValue">40.6</div>
+                <div class="indicator-meta"><span id="capePercentile">99</span>th percentile since 1881</div>
                 <div class="percentile-bar">
-                    <div class="percentile-fill" id="capeFill" style="width: 97%; background: var(--accent-red);"></div>
+                    <div class="percentile-fill" id="capeFill" style="width: 99%; background: var(--accent-red);"></div>
                 </div>
             </div>
 
@@ -588,8 +588,8 @@
                     <span class="indicator-name">Buffett Indicator*</span>
                     <div class="indicator-dot dot-red"></div>
                 </div>
-                <div class="indicator-value" id="buffettValue">260%</div>
-                <div class="indicator-meta" id="buffettPercentile">Record territory — top 1% since 1947</div>
+                <div class="indicator-value" id="buffettValue">250%</div>
+                <div class="indicator-meta" id="buffettPercentile">Top 1% since 1947</div>
                 <div class="percentile-bar">
                     <div class="percentile-fill" id="buffettFill" style="width: 100%; background: var(--accent-red);"></div>
                 </div>
@@ -694,8 +694,9 @@
 
                 <div class="caveat">
                     <strong>*Buffett Indicator note:</strong> We use Federal Reserve Z.1 data for total market capitalization,
-                    which is broader than the Wilshire 5000 used by most sources. This produces a higher reading (~260% vs ~220%
-                    reported elsewhere) but allows longer-term data, going back to 1947.
+                    which is broader than the Wilshire 5000 used by most sources. It covers every publicly traded US
+                    company rather than an index's constituents, so it reads consistently higher than the figures quoted
+                    elsewhere — but it goes back to 1947, where Wilshire-based series start in 1971.
                 </div>
 
                 <div class="caveat">
@@ -751,13 +752,13 @@
         // API endpoint - update this to your deployed backend URL
         const API_BASE = 'https://s-p-500-cycle-tracker-production.up.railway.app';
 
-        // Fallback static data (updated Jan 2026 from Shiller data)
+        // Fallback static data (updated Sep 2026 from Shiller + FRED)
         const STATIC_DATA = {
             score: 99,
-            sp500: { value: 5970.84, timestamp: 'Jan 8 close' },
-            cape: { value: 39.9, percentile: 98 },
-            buffett: { value: 260, percentile: 100 },
-            creditSpread: { value: 1.73, percentile: 22 }
+            sp500: { value: 7747.71, timestamp: 'Sep 3 close' },
+            cape: { value: 40.6, percentile: 99 },
+            buffett: { value: 250, percentile: 99 },
+            creditSpread: { value: 1.58, percentile: 11 }
         };
 
         // Fallback static chart data (used if API fails)
@@ -786,8 +787,9 @@
             { year: 2018, value: 33.3 },
             { year: 2020, value: 31.0 },
             { year: 2021, value: 38.6 },
-            { year: 2023, value: 30.0 },
-            { year: 2025, value: 39.9 }
+            { year: 2023, value: 31.5 },
+            { year: 2025, value: 39.6 },
+            { year: 2026, value: 40.6 }
         ];
 
         const FALLBACK_BUFFETT_DATA = [
@@ -813,7 +815,8 @@
             { year: 2021, value: 239 },
             { year: 2022, value: 157 },
             { year: 2024, value: 232 },
-            { year: 2025, value: 260 }
+            { year: 2025, value: 265 },
+            { year: 2026, value: 250 }
         ];
 
         // Chart instances (so we can update them)
@@ -869,8 +872,9 @@
 
                 // Update Buffett
                 document.getElementById('buffettValue').textContent = data.buffett.value + '%';
-                document.getElementById('buffettPercentile').textContent = data.buffett.isAllTimeHigh ?
-                    'Record territory — top 1% since 1947' : data.buffett.percentile + 'th percentile';
+                document.getElementById('buffettPercentile').textContent = data.buffett.isAllTimeHigh
+                    ? 'All-time high since 1947'
+                    : (data.buffett.percentile >= 99 ? 'Top 1% since 1947' : data.buffett.percentile + 'th percentile');
                 document.getElementById('buffettFill').style.width = Math.min(data.buffett.percentile, 100) + '%';
 
                 // Update Credit Spread

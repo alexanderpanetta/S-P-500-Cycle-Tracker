@@ -71,22 +71,23 @@ const CACHE_DURATION = {
 const HISTORICAL = {
     creditSpread: {
         getPercentile: (value) => {
+            // Empirical quantiles from 10,168 daily BAA10Y observations, 1986-2026
             const percentiles = [
-                { value: 1.16, pct: 0 }, { value: 1.50, pct: 5 }, { value: 1.69, pct: 19 },
-                { value: 1.76, pct: 25 }, { value: 2.15, pct: 50 }, { value: 2.67, pct: 75 },
-                { value: 3.00, pct: 85 }, { value: 3.50, pct: 95 }, { value: 6.16, pct: 100 }
+                { value: 1.16, pct: 0 }, { value: 1.50, pct: 5 }, { value: 1.57, pct: 10 },
+                { value: 1.74, pct: 25 }, { value: 2.13, pct: 50 }, { value: 2.66, pct: 75 },
+                { value: 3.11, pct: 90 }, { value: 3.32, pct: 95 }, { value: 6.16, pct: 100 }
             ];
             return interpolatePercentile(value, percentiles);
         }
     },
     cape: {
         getPercentile: (value) => {
-            // Empirical quantiles from 1,746 months of Shiller CAPE data, 1881-2026
+            // Empirical quantiles from 1,749 months of Shiller CAPE data, 1881-2026
             const percentiles = [
-                { value: 4.8, pct: 0 }, { value: 9.3, pct: 10 }, { value: 12.0, pct: 25 },
-                { value: 16.6, pct: 50 }, { value: 21.5, pct: 75 }, { value: 28.1, pct: 90 },
-                { value: 32.8, pct: 95 }, { value: 38.0, pct: 98 }, { value: 41.2, pct: 99 },
-                { value: 44.2, pct: 100 }
+                { value: 4.78, pct: 0 }, { value: 9.31, pct: 10 }, { value: 12.01, pct: 25 },
+                { value: 16.61, pct: 50 }, { value: 21.55, pct: 75 }, { value: 28.30, pct: 90 },
+                { value: 33.03, pct: 95 }, { value: 38.58, pct: 98 }, { value: 41.23, pct: 99 },
+                { value: 44.20, pct: 100 }
             ];
             return interpolatePercentile(value, percentiles);
         }
@@ -497,6 +498,54 @@ app.get('/api/historical', async (req, res) => {
     }
 });
 
+// Latest Buffett Indicator — market cap and GDP MUST come from the same quarter.
+// FRED publishes GDP about a month after quarter end but the Z.1 market cap series
+// about ten weeks after, so each series' newest observation is usually a different
+// quarter. Dividing the latest market cap by a *later* quarter's GDP understates the
+// ratio (and disagrees with the chart, which joins on quarter).
+async function fetchLatestBuffett() {
+    const historical = await fetchHistoricalBuffett();
+    const full = historical && historical.full;
+
+    if (full && full.length > 0) {
+        const latest = full[full.length - 1];
+        const allTimeHigh = full.reduce((max, p) => Math.max(max, p.value), 0);
+        return {
+            value: latest.value,
+            marketCapDate: latest.date,
+            gdpDate: latest.date,
+            allTimeHigh: allTimeHigh,
+            isAllTimeHigh: latest.value >= allTimeHigh
+        };
+    }
+
+    // Fallback: pair the newest quarter present in BOTH series
+    const [mcData, gdpData] = await Promise.all([
+        fetch(`${FRED_BASE}?series_id=BOGZ1LM883164115Q&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=12`).then(r => r.json()),
+        fetch(`${FRED_BASE}?series_id=GDP&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=12`).then(r => r.json())
+    ]);
+
+    const gdpByQuarter = {};
+    for (const obs of (gdpData.observations || [])) {
+        if (obs.value !== '.') gdpByQuarter[obs.date] = parseFloat(obs.value) * 1000;
+    }
+
+    for (const obs of (mcData.observations || [])) {
+        if (obs.value === '.') continue;
+        const gdp = gdpByQuarter[obs.date];
+        if (!gdp) continue;
+        return {
+            value: Math.round((parseFloat(obs.value) / gdp) * 100),
+            marketCapDate: obs.date,
+            gdpDate: obs.date,
+            allTimeHigh: null,
+            isAllTimeHigh: false
+        };
+    }
+
+    throw new Error('No quarter with both market cap and GDP data');
+}
+
 // Endpoint: Credit Spread
 app.get('/api/credit-spread', async (req, res) => {
     try {
@@ -538,34 +587,19 @@ app.get('/api/buffett', async (req, res) => {
             return res.json(cache.buffett.data);
         }
 
-        const [mcResponse, gdpResponse] = await Promise.all([
-            fetch(`${FRED_BASE}?series_id=BOGZ1LM883164115Q&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`),
-            fetch(`${FRED_BASE}?series_id=GDP&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`)
-        ]);
+        const latest = await fetchLatestBuffett();
 
-        const mcData = await mcResponse.json();
-        const gdpData = await gdpResponse.json();
+        const result = {
+            value: latest.value,
+            percentile: HISTORICAL.buffett.getPercentile(latest.value),
+            marketCapDate: latest.marketCapDate,
+            gdpDate: latest.gdpDate,
+            isAllTimeHigh: latest.isAllTimeHigh,
+            updatedAt: new Date().toISOString()
+        };
 
-        if (mcData.observations?.length > 0 && gdpData.observations?.length > 0) {
-            const marketCap = parseFloat(mcData.observations[0].value);
-            const gdp = parseFloat(gdpData.observations[0].value) * 1000;
-            const buffettValue = (marketCap / gdp) * 100;
-            const percentile = HISTORICAL.buffett.getPercentile(buffettValue);
-
-            const result = {
-                value: Math.round(buffettValue),
-                percentile: percentile,
-                marketCapDate: mcData.observations[0].date,
-                gdpDate: gdpData.observations[0].date,
-                isAllTimeHigh: buffettValue >= 245,
-                updatedAt: new Date().toISOString()
-            };
-
-            cache.buffett = { data: result, timestamp: Date.now() };
-            return res.json(result);
-        }
-
-        throw new Error('No data from FRED');
+        cache.buffett = { data: result, timestamp: Date.now() };
+        return res.json(result);
     } catch (error) {
         console.error('Buffett error:', error);
         res.status(500).json({ error: error.message });
@@ -602,13 +636,10 @@ app.get('/api/cape', async (req, res) => {
 app.get('/api/indicators', async (req, res) => {
     try {
         // Fetch all data in parallel
-        const [shillerData, creditResponse, buffettResponses, sp500Response] = await Promise.all([
+        const [shillerData, creditResponse, buffettLatest, sp500Response] = await Promise.all([
             fetchShillerData(),
             fetch(`${FRED_BASE}?series_id=BAA10Y&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json()),
-            Promise.all([
-                fetch(`${FRED_BASE}?series_id=BOGZ1LM883164115Q&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json()),
-                fetch(`${FRED_BASE}?series_id=GDP&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json())
-            ]),
+            fetchLatestBuffett(),
             fetch(`${FRED_BASE}?series_id=SP500&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`).then(r => r.json())
         ]);
 
@@ -620,12 +651,9 @@ app.get('/api/indicators', async (req, res) => {
         const creditValue = parseFloat(creditResponse.observations[0].value);
         const creditPercentile = HISTORICAL.creditSpread.getPercentile(creditValue);
 
-        // Parse Buffett
-        const [mcData, gdpData] = buffettResponses;
-        const marketCap = parseFloat(mcData.observations[0].value);
-        const gdp = parseFloat(gdpData.observations[0].value) * 1000;
-        const buffettValue = Math.round((marketCap / gdp) * 100);
-        console.log('Buffett calc:', { marketCap, gdp, buffettValue, mcDate: mcData.observations[0].date, gdpDate: gdpData.observations[0].date });
+        // Parse Buffett (market cap and GDP joined on the same quarter)
+        const buffettValue = buffettLatest.value;
+        console.log('Buffett calc:', buffettLatest);
         const buffettPercentile = HISTORICAL.buffett.getPercentile(buffettValue);
 
         // Composite score = average of CAPE and Buffett percentiles
@@ -652,8 +680,8 @@ app.get('/api/indicators', async (req, res) => {
             buffett: {
                 value: buffettValue,
                 percentile: buffettPercentile,
-                date: mcData.observations[0].date,
-                isAllTimeHigh: buffettValue >= 245
+                date: buffettLatest.marketCapDate,
+                isAllTimeHigh: buffettLatest.isAllTimeHigh
             },
             creditSpread: {
                 value: creditValue,
